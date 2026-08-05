@@ -36,7 +36,7 @@ Para encerrar corretamente e gerar o backup automÃ¡tico, feche o servidor com 
 ### Windows PowerShell
 
 ```powershell
-git clone https://github.com/erickgalvao04/FinanSys---Gest-o-de-Finan-as-pessoais.git
+git clone https://github.com/erickgalvao04/FinanSys.git
 cd FinanSys
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
@@ -46,7 +46,7 @@ py -m venv .venv
 ### Linux ou macOS
 
 ```bash
-git clone https://github.com/erickgalvao04/FinanSys---Gest-o-de-Finan-as-pessoais.git
+git clone https://github.com/erickgalvao04/FinanSys.git
 cd FinanSys
 python3 -m venv .venv
 ./.venv/bin/python -m pip install -r requirements.txt
