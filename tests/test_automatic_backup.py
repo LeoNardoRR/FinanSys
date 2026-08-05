@@ -12,6 +12,7 @@ BACKUPS = RUNTIME
 
 
 def reset_runtime() -> None:
+    RUNTIME.mkdir(parents=True, exist_ok=True)
     for path in RUNTIME.rglob("*"):
         if path.is_file():
             path.unlink()
