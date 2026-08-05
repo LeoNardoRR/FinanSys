@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>{{ page_title }} · FinanSys</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/app.css') }}">
+  <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="/">
+      <span class="brand-mark"><svg aria-hidden="true"><use href="/static/icons.svg#icon-flow"></use></svg></span>
+      <span><strong>FinanSys</strong><small>Finanças pessoais</small></span>
+    </a>
+    <nav class="nav" aria-label="Navegação principal">
+      <span class="nav-label">Visão geral</span>
+      <a href="/" class="nav-item {% if request.url.path == '/' %}active{% endif %}"><span class="nav-icon"><svg aria-hidden="true"><use href="/static/icons.svg#icon-home"></use></svg></span><span>Dashboard</span></a>
+      <span class="nav-label">Organização</span>
+      <a href="/transactions" class="nav-item {% if request.url.path.startswith('/transactions') %}active{% endif %}"><span class="nav-icon"><svg aria-hidden="true"><use href="/static/icons.svg#icon-transactions"></use></svg></span><span>Lançamentos</span></a>
+      <a href="/purchases" class="nav-item {% if request.url.path.startswith('/purchases') %}active{% endif %}"><span class="nav-icon"><svg aria-hidden="true"><use href="/static/icons.svg#icon-shopping"></use></svg></span><span>Compras parceladas</span></a>
+      <a href="/cards" class="nav-item {% if request.url.path.startswith('/cards') %}active{% endif %}"><span class="nav-icon"><svg aria-hidden="true"><use href="/static/icons.svg#icon-card"></use></svg></span><span>Cartões</span></a>
+      <a href="/goals" class="nav-item {% if request.url.path.startswith('/goals') %}active{% endif %}"><span class="nav-icon"><svg aria-hidden="true"><use href="/static/icons.svg#icon-target"></use></svg></span><span>Metas</span></a>
+      <a href="/subscriptions" class="nav-item {% if request.url.path.startswith('/subscriptions') %}active{% endif %}"><span class="nav-icon"><svg aria-hidden="true"><use href="/static/icons.svg#icon-repeat"></use></svg></span><span>Assinaturas</span></a>
+      <a href="/cash-flow" class="nav-item {% if request.url.path.startswith('/cash-flow') %}active{% endif %}"><span class="nav-icon"><svg aria-hidden="true"><use href="/static/icons.svg#icon-flow"></use></svg></span><span>Fluxo de caixa</span></a>
+      <a href="/planning" class="nav-item {% if request.url.path.startswith('/planning') %}active{% endif %}"><span class="nav-icon"><svg aria-hidden="true"><use href="/static/icons.svg#icon-plan"></use></svg></span><span>Planejamento</span></a>
+      <span class="nav-label">Sistema</span>
+      <a href="/settings" class="nav-item {% if request.url.path.startswith('/settings') %}active{% endif %}"><span class="nav-icon"><svg aria-hidden="true"><use href="/static/icons.svg#icon-settings"></use></svg></span><span>Configurações</span></a>
+      <a href="/help" class="nav-item {% if request.url.path.startswith('/help') %}active{% endif %}"><span class="nav-icon"><svg aria-hidden="true"><use href="/static/icons.svg#icon-help"></use></svg></span><span>Como usar</span></a>
+    </nav>
+    <div class="sidebar-footer"><svg class="inline-icon" aria-hidden="true"><use href="/static/icons.svg#icon-lock"></use></svg> Dados salvos apenas neste computador.</div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-button menu-button" type="button" onclick="document.body.classList.toggle('menu-open')" aria-label="Abrir menu"><svg aria-hidden="true"><use href="/static/icons.svg#icon-menu"></use></svg></button>
+      <div><small class="eyebrow">FinanSys</small><h1>{{ page_title }}</h1></div>
+      <div class="top-actions"><button class="theme-button" id="theme-toggle" type="button" aria-label="Alternar tema"><svg aria-hidden="true"><use href="/static/icons.svg#icon-theme"></use></svg><span>Tema</span></button><span class="local-badge">● Local</span></div>
+    </header>
+    <section class="content">
+      {% if saved %}<div class="notice success">Alterações salvas com sucesso.</div>{% endif %}
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+  <div class="sidebar-overlay" onclick="document.body.classList.remove('menu-open')"></div>
+  <script src="{{ url_for('static', path='js/theme.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="icon-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></symbol>
+  <symbol id="icon-transactions" viewBox="0 0 24 24"><path d="M7 3v15"/><path d="m3.5 14.5 3.5 3.5 3.5-3.5"/><path d="M17 21V6"/><path d="m13.5 9.5 3.5-3.5 3.5 3.5"/></symbol>
+  <symbol id="icon-card" viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 9.5h19"/><path d="M6 15h4"/></symbol>
+  <symbol id="icon-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 3.5V1.8M20.5 12h1.7M12 20.5v1.7M3.5 12H1.8"/></symbol>
+  <symbol id="icon-repeat" viewBox="0 0 24 24"><path d="M4 8a8 8 0 0 1 13.5-2L20 8.5"/><path d="M20 4v4.5h-4.5"/><path d="M20 16a8 8 0 0 1-13.5 2L4 15.5"/><path d="M4 20v-4.5h4.5"/></symbol>
+  <symbol id="icon-flow" viewBox="0 0 24 24"><path d="M4 18V9M10 18V5M16 18v-7M22 18V3"/><path d="M2 18h21"/></symbol>
+  <symbol id="icon-plan" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5M8 16h3"/><path d="m15 16 1.5 1.5L20 14"/></symbol>
+  <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.8 1.8 0 0 0 .4 2l.1.1-2.8 2.8-.1-.1a1.8 1.8 0 0 0-2-.4 1.8 1.8 0 0 0-1.1 1.6v.2h-4V21A1.8 1.8 0 0 0 8.8 19.4a1.8 1.8 0 0 0-2 .4l-.1.1-2.8-2.8.1-.1a1.8 1.8 0 0 0 .4-2A1.8 1.8 0 0 0 2.8 14h-.2v-4h.2a1.8 1.8 0 0 0 1.6-1.1 1.8 1.8 0 0 0-.4-2l-.1-.1L6.7 4l.1.1a1.8 1.8 0 0 0 2 .4A1.8 1.8 0 0 0 10 2.8v-.2h4v.2a1.8 1.8 0 0 0 1.1 1.6 1.8 1.8 0 0 0 2-.4l.1-.1L20 6.7l-.1.1a1.8 1.8 0 0 0-.4 2A1.8 1.8 0 0 0 21.2 10h.2v4h-.2a1.8 1.8 0 0 0-1.8 1z"/></symbol>
+  <symbol id="icon-help" viewBox="0 0 24 24"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 4.5v17M8 6h8M8 10h6"/></symbol>
+  <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="icon-theme" viewBox="0 0 24 24"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2z"/></symbol>
+  <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></symbol>
+  <symbol id="icon-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16.5 8"/></symbol>
+  <symbol id="icon-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4"/><path d="M8.2 15.5A7 7 0 1 1 15.8 15.5c-.6.5-.8 1.1-.8 1.5H9c0-.4-.2-1-.8-1.5z"/></symbol>
+  <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="icon-shopping" viewBox="0 0 24 24"><path d="M6 8h12l1 13H5L6 8z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/><path d="M8 13h8"/></symbol>
+</svg>

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+{% if protected %}<div class="notice warning">Compra parcelada protegida: gerencie ou exclua o conjunto completo nesta página.</div>{% endif %}
+<div class="page-heading"><div><h2>Produtos e compras grandes</h2><p>Cadastre uma vez e acompanhe todas as parcelas, faturas e valores restantes.</p></div><button class="btn btn-primary" type="button" onclick="document.getElementById('new-purchase').open=true;document.getElementById('new-purchase').scrollIntoView({behavior:'smooth'})"><svg class="inline-icon"><use href="/static/icons.svg#icon-shopping"></use></svg> Nova compra</button></div>
+
+<div class="grid grid-3 mb-2">
+  <article class="card kpi"><span class="kpi-label">Total em produtos cadastrados</span><div class="kpi-value">R$ {{ '%.2f'|format(total_purchased)|replace('.', ',') }}</div></article>
+  <article class="card kpi"><span class="kpi-label">Saldo das parcelas futuras</span><div class="kpi-value warning">R$ {{ '%.2f'|format(upcoming_total)|replace('.', ',') }}</div><small>Inclui parcelas que vencem hoje ou depois.</small></article>
+  <article class="card kpi"><span class="kpi-label">Compras em andamento</span><div class="kpi-value">{{ active_count }}</div><small>Com pelo menos uma parcela futura.</small></article>
+</div>
+
+{% if prefill %}<div class="notice success">Compra prevista carregada. Escolha o cartão e o número de parcelas para transformá-la em compra real.</div>{% endif %}
+{% if not has_eligible_cards %}<div class="notice warning">Para parcelar uma compra, primeiro <a href="/settings#cards">cadastre um cartão com os dias de fechamento e vencimento</a>.</div>{% endif %}
+<details class="panel mb-2" id="new-purchase" {% if prefill %}open{% endif %}><summary>＋ Registrar produto comprado</summary><div class="card"><div class="card-body"><form method="post" action="/purchases" class="form-grid" id="purchase-form">{% if prefill %}<input type="hidden" name="planned_expense_id" value="{{ prefill.id }}">{% endif %}
+  <div class="field wide"><label>Produto</label><input class="control" name="product_name" id="product-name" placeholder="Ex.: Geladeira Frost Free" value="{{ prefill.description if prefill else '' }}" required maxlength="160"></div>
+  <div class="field"><label>Valor total (R$)</label><input class="control" name="total_amount" id="purchase-total" inputmode="decimal" placeholder="0,00" value="{{ prefill.amount if prefill else '' }}" required></div>
+  <div class="field"><label>Quantidade de parcelas</label><input class="control" type="number" name="installments_total" id="purchase-installments" value="2" min="1" max="120" required></div>
+  <div class="field"><label>Cartão</label><select class="control" name="card_id" id="purchase-card" required><option value="">Selecione</option>{% for card in cards %}<option value="{{ card.id }}" data-closing="{{ card.closing_day or '' }}" data-due="{{ card.due_day or '' }}" {% if not card.closing_day or not card.due_day %}disabled{% endif %}>{{ card.name }}{% if card.closing_day and card.due_day %} · fecha {{ card.closing_day }}, vence {{ card.due_day }}{% else %} · configure os dias{% endif %}</option>{% endfor %}</select></div>
+  <div class="field"><label>Data da compra</label><input class="control" type="date" name="purchased_on" id="purchase-date" value="{{ prefill.expected_on if prefill else today }}" required></div>
+  <div class="field"><label>Loja (opcional)</label><input class="control" name="store_name" placeholder="Ex.: Magazine Luiza" maxlength="120"></div>
+  <div class="field"><label>Categoria</label><select class="control" name="category_id">{% for category in categories %}<option value="{{ category.id }}" {% if category.name=='Compras' %}selected{% endif %}>{{ category.name }}</option>{% else %}<option value="">Compras</option>{% endfor %}</select></div>
+  <div class="field"><label>Responsável</label><select class="control" name="person_id"><option value="">Família</option>{% for person in people %}<option value="{{ person.id }}" {% if prefill and prefill.person_id==person.id %}selected{% endif %}>{{ person.name }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Garantia em meses</label><input class="control" type="number" name="warranty_months" min="0" max="240" placeholder="Ex.: 12"></div>
+  <div class="field wide"><label>Observações</label><textarea class="control" name="notes" placeholder="Modelo, número do pedido, detalhes da garantia…"></textarea></div>
+  <div class="field full"><div class="purchase-preview" id="purchase-preview"><div><small>Resumo</small><strong id="preview-title">Informe produto e valor</strong></div><div><small>Parcelamento</small><strong id="preview-installment">—</strong></div><div><small>Término estimado</small><strong id="preview-end">—</strong></div><div><small>Cartão</small><strong id="preview-card">—</strong></div></div></div>
+  <div class="field full button-row"><button class="btn btn-primary"><svg class="inline-icon"><use href="/static/icons.svg#icon-check"></use></svg> Criar compra e parcelas</button><span class="muted purchase-form-hint">As parcelas aparecerão também em Lançamentos, Cartões, Dashboard e Planejamento.</span></div>
+</form></div></div></details>
+
+<form class="filters" method="get"><input class="control" name="query" value="{{ query }}" placeholder="Buscar produto"><button class="btn btn-primary">Buscar</button>{% if query %}<a class="btn" href="/purchases">Limpar</a>{% endif %}</form>
+
+<div class="purchase-grid">
+{% for row in purchase_rows %}<article class="card purchase-card">
+  <div class="purchase-card-head"><span class="purchase-product-icon"><svg><use href="/static/icons.svg#icon-shopping"></use></svg></span><div><h3>{{ row.purchase.product_name }}</h3><p>{{ row.purchase.store_name or row.category }} · {{ row.person }}</p></div><span class="badge {% if row.finished %}badge-income{% endif %}">{{ 'Finalizada pelo calendário' if row.finished else 'Em andamento' }}</span></div>
+  <div class="purchase-card-body">
+    <div class="purchase-main-metrics"><div><small>Valor total</small><strong>R$ {{ '%.2f'|format(row.purchase.total_amount)|replace('.', ',') }}</strong></div><div><small>Parcelamento</small><strong>{{ row.purchase.installments_total }}x de R$ {{ '%.2f'|format(row.installment_value)|replace('.', ',') }}</strong></div><div><small>Cartão</small><strong>{{ row.card.name if row.card else 'Cartão removido' }}</strong></div></div>
+    <div class="metric-line mt-2"><span>{{ row.elapsed }} de {{ row.purchase.installments_total }} vencimento(s) já passaram</span><strong>{{ '%.0f'|format(row.progress) }}%</strong></div><div class="progress"><span style="width:{{ row.progress }}%"></span></div>
+    <div class="purchase-secondary"><div><small>Saldo futuro</small><strong class="warning">R$ {{ '%.2f'|format(row.remaining)|replace('.', ',') }}</strong></div><div><small>Próximo vencimento</small><strong>{{ row.next_due.strftime('%d/%m/%Y') if row.next_due else 'Sem parcelas futuras' }}</strong></div><div><small>Último vencimento</small><strong>{{ row.purchase.last_due_on.strftime('%d/%m/%Y') }}</strong></div>{% if row.purchase.warranty_until %}<div><small>Garantia até</small><strong>{{ row.purchase.warranty_until.strftime('%d/%m/%Y') }}</strong></div>{% endif %}</div>
+    <details class="installment-details"><summary>Ver cronograma das {{ row.purchase.installments_total }} parcelas</summary><div class="table-wrap"><table class="table"><thead><tr><th>Parcela</th><th>Lançamento</th><th>Vencimento da fatura</th><th>Valor</th><th>Situação</th></tr></thead><tbody>{% for installment in row.installments %}<tr><td>{{ installment.transaction.installment_number }}/{{ installment.transaction.installments_total }}</td><td>{{ installment.transaction.occurred_on.strftime('%d/%m/%Y') }}</td><td>{{ installment.due.strftime('%d/%m/%Y') }}</td><td>R$ {{ '%.2f'|format(installment.transaction.amount)|replace('.', ',') }}</td><td><span class="badge">{{ installment.label }}</span></td></tr>{% endfor %}</tbody></table></div></details>
+    {% if row.purchase.notes %}<p class="purchase-notes"><strong>Observações:</strong> {{ row.purchase.notes }}</p>{% endif %}
+    <div class="button-row purchase-actions"><a class="btn btn-sm" href="/transactions?query={{ row.purchase.product_name|urlencode }}">Ver nos lançamentos</a><form method="post" action="/purchases/{{ row.purchase.id }}/delete" onsubmit="return confirm('Excluir esta compra e todas as parcelas relacionadas?')"><button class="btn btn-sm btn-danger">Excluir compra completa</button></form></div>
+  </div>
+</article>{% else %}<article class="card" style="grid-column:1/-1"><div class="empty"><strong>Nenhuma compra parcelada cadastrada</strong>Use “Nova compra” para registrar geladeira, móveis, eletrônicos e outros produtos de alto valor.</div></article>{% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', path='js/purchases.js') }}"></script>{% endblock %}
