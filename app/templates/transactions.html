@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-heading"><div><h2>Seu histórico financeiro</h2><p>Receitas, despesas e parcelas em um só lugar.</p></div><div class="button-row"><a class="btn btn-primary" href="/purchases"><svg class="inline-icon"><use href="/static/icons.svg#icon-shopping"></use></svg> Compra parcelada</a><a class="btn" href="/reports/transactions.xlsx">Exportar Excel</a><a class="btn" href="/reports/summary.pdf">Exportar PDF</a></div></div>
-<details class="panel mb-2"><summary>＋ Novo lançamento</summary><div class="card"><div class="card-body"><form method="post" action="/transactions" class="form-grid">
+<details class="panel mb-2" id="novo-lancamento"><summary>＋ Novo lançamento</summary><div class="card"><div class="card-body"><form method="post" action="/transactions" class="form-grid">
 <div class="field wide"><label>Descrição</label><input class="control" name="description" placeholder="Ex.: Supermercado" required maxlength="160"></div>
 <div class="field"><label>Valor total (R$)</label><input class="control" name="amount" inputmode="decimal" placeholder="0,00" required></div>
 <div class="field"><label>Data inicial</label><input class="control" type="date" name="occurred_on" value="{{ today }}" required></div>

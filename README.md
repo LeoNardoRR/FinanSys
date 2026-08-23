@@ -14,7 +14,8 @@ Controle financeiro pessoal e familiar que roda localmente no navegador. Desenvo
 - Assinaturas recorrentes com geração idempotente, sem cobranças duplicadas.
 - Perfis da família, fontes de renda e planejamento de compras futuras.
 - Fluxo de caixa, exportação CSV/Excel/PDF e backups rotativos.
-- Interface responsiva com temas claro e escuro.
+- Interface responsiva com navegação inferior no celular, temas claro e escuro e PWA instalável.
+- API REST opcional em `/api/v1` e aplicativo Expo em `mobile/`.
 - Central **Como usar** integrada ao aplicativo.
 
 ## Instalação rápida no Windows
@@ -98,7 +99,25 @@ Navegador
   -> SQLite local
 ```
 
-A aplicação é deliberadamente simples: não usa React, Node.js, Docker ou servidor de banco externo.
+A interface principal continua deliberadamente simples e server-side. React Native/Expo aparece apenas no cliente móvel opcional; Docker e servidor de banco externo não são obrigatórios.
+
+## Celular, PWA e API
+
+No navegador do celular, abra o endereço do FinanSys e use **Instalar aplicativo** quando o navegador oferecer essa opção. O service worker armazena somente os arquivos visuais do app; páginas, respostas da API e dados financeiros não entram no cache offline.
+
+Para testar na rede local, defina um token e libere o servidor apenas na sua rede confiável:
+
+```bash
+FINANSYS_API_TOKEN="troque-por-um-token-forte" FINANSYS_HOST=0.0.0.0 python main.py
+```
+
+O aplicativo Expo está documentado em [`mobile/README.md`](mobile/README.md). O backend também aceita `DATABASE_URL` para uma futura implantação PostgreSQL, mas autenticação multiusuário e migrações de produção continuam fora do escopo desta prévia.
+
+## Prévia no GitHub Pages
+
+A pasta [`pages-preview/`](pages-preview/) contém uma demonstração estática e separada da aplicação principal. Ela permite navegar e criar lançamentos de exemplo, guardados somente no `localStorage` do navegador.
+
+O GitHub Pages **não executa FastAPI, Python ou SQLite**. Portanto, a prévia pública não acessa o banco real, não sincroniza entre dispositivos e não deve ser confundida com a aplicação completa. O workflow de Pages publica somente essa pasta e não altera a execução do backend.
 
 ## Documentação
 

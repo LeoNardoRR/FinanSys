@@ -3,10 +3,12 @@ import logging
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.database import initialize_database
 from app.routes.cards import router as cards_router
+from app.routes.api import router as api_router
 from app.routes.cash_flow import router as cash_flow_router
 from app.routes.dashboard import router as dashboard_router
 from app.routes.goals import router as goals_router
@@ -19,7 +21,7 @@ from app.routes.settings import router as settings_router
 from app.routes.subscriptions import router as subscriptions_router
 from app.routes.transactions import router as transactions_router
 from app.services.automatic_backup import rotate_automatic_backups
-from app.settings import APP_NAME, STATIC_DIR
+from app.settings import APP_NAME, HOST, PORT, STATIC_DIR
 
 logger = logging.getLogger("finansys")
 
@@ -46,6 +48,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title=APP_NAME, lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 for router in (
+    api_router,
     dashboard_router, transactions_router, purchases_router, cards_router, goals_router,
     subscriptions_router, cash_flow_router, planning_router, settings_router,
     reports_router, help_router, health_router,
@@ -53,5 +56,19 @@ for router in (
     app.include_router(router)
 
 
+@app.get("/manifest.webmanifest", include_in_schema=False)
+def manifest():
+    return FileResponse(STATIC_DIR / "manifest.webmanifest", media_type="application/manifest+json")
+
+
+@app.get("/service-worker.js", include_in_schema=False)
+def service_worker():
+    return FileResponse(
+        STATIC_DIR / "service-worker.js",
+        media_type="application/javascript",
+        headers={"Service-Worker-Allowed": "/", "Cache-Control": "no-cache"},
+    )
+
+
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("main:app", host=HOST, port=PORT, reload=True)
