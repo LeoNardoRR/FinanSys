@@ -1,6 +1,6 @@
 # FinanSys
 
-Controle financeiro pessoal e familiar que roda localmente no navegador. Desenvolvido com FastAPI, SQLAlchemy, SQLite e Jinja2, sem conta, assinatura ou servidor externo.
+Controle financeiro pessoal e familiar com duas formas de uso: a aplicação local em FastAPI/SQLite e o aplicativo web instalável para celular, publicado no GitHub Pages com autenticação e banco Supabase.
 
 > Seus lançamentos ficam no arquivo `data/finansys.db` da sua própria instalação. Bancos, backups e exportações são ignorados pelo Git.
 
@@ -113,11 +113,21 @@ FINANSYS_API_TOKEN="troque-por-um-token-forte" FINANSYS_HOST=0.0.0.0 python main
 
 O aplicativo Expo está documentado em [`mobile/README.md`](mobile/README.md). O backend também aceita `DATABASE_URL` para uma futura implantação PostgreSQL, mas autenticação multiusuário e migrações de produção continuam fora do escopo desta prévia.
 
-## Prévia no GitHub Pages
+## Aplicativo gratuito no GitHub Pages
 
-A pasta [`pages-preview/`](pages-preview/) contém uma demonstração estática e separada da aplicação principal. Ela permite navegar e criar lançamentos de exemplo, guardados somente no `localStorage` do navegador.
+A pasta [`pages-preview/`](pages-preview/) contém o aplicativo web instalável. Depois de criar e confirmar uma conta, receitas, despesas, parcelamentos, cartões, metas e assinaturas são salvos no PostgreSQL do Supabase e sincronizados entre celular e computador.
 
-O GitHub Pages **não executa FastAPI, Python ou SQLite**. Portanto, a prévia pública não acessa o banco real, não sincroniza entre dispositivos e não deve ser confundida com a aplicação completa. O workflow de Pages publica somente essa pasta e não altera a execução do backend.
+O GitHub Pages continua sendo apenas o host dos arquivos do frontend — ele não executa FastAPI, Python ou SQLite. A persistência da versão online é feita pelo Supabase. A chave presente no JavaScript é uma chave pública de cliente; o isolamento real é aplicado no banco por Row Level Security (RLS), de forma que cada conta acessa somente os próprios registros. Nunca adicione uma chave `service_role` ao frontend.
+
+Para gerar a versão publicada localmente:
+
+```bash
+cd pages-preview
+npm ci
+npm run build
+```
+
+As migrações versionadas do banco ficam em [`supabase/migrations/`](supabase/migrations/). O workflow de Pages compila e publica somente o aplicativo web, sem alterar o backend local.
 
 ## Documentação
 
@@ -129,7 +139,7 @@ O GitHub Pages **não executa FastAPI, Python ou SQLite**. Portanto, a prévia p
 
 ## Segurança e escopo
 
-O FinanSys não possui login porque foi projetado para uso pessoal em `127.0.0.1`. Não exponha a aplicação diretamente à internet. Uma versão hospedada para múltiplos usuários exigiria autenticação, isolamento dos dados, HTTPS, proteção CSRF e revisão de segurança.
+A aplicação FastAPI/SQLite local não possui login porque foi projetada para uso pessoal em `127.0.0.1`; não a exponha diretamente à internet. O aplicativo online possui Supabase Auth, HTTPS e políticas RLS por usuário. Mantenha as políticas e os testes de isolamento ao evoluir o esquema.
 
 Este projeto não substitui aconselhamento financeiro, contábil ou tributário.
 

@@ -4,28 +4,95 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#1d4ed8">
-  <title>FinanSys · Prévia mobile</title>
-  <meta name="description" content="Prévia navegável da experiência mobile do FinanSys.">
+  <meta name="color-scheme" content="light">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://jrbemrqahgnabqrrvhqb.supabase.co wss://jrbemrqahgnabqrrvhqb.supabase.co; base-uri 'none'; form-action 'self'">
+  <title>FinanSys · Finanças pessoais</title>
+  <meta name="description" content="Aplicativo seguro para organizar suas finanças pessoais.">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="app-icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="preview-note"><strong>Prévia demonstrativa</strong><span>Os dados ficam somente neste navegador. O backend FastAPI não roda no GitHub Pages.</span></div>
-  <main class="app-shell">
-    <header><div><small>FINANSYS</small><h1 id="page-title">Visão geral</h1></div><button class="avatar" aria-label="Perfil demonstrativo">LR</button></header>
+  <div class="network-banner" id="network-banner" hidden>Você está sem conexão. Seus dados serão carregados quando a internet voltar.</div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <section class="auth-screen" id="auth-screen">
+    <div class="auth-brand"><img src="app-icon.svg" width="54" height="54" alt=""><div><strong>FinanSys</strong><span>Seu dinheiro, sob controle.</span></div></div>
+    <article class="auth-card">
+      <div class="auth-heading"><small>ACESSO SEGURO</small><h1>Entre na sua conta</h1><p>Seus dados ficam sincronizados e protegidos por usuário.</p></div>
+      <div class="auth-tabs" role="tablist"><button type="button" class="active" data-auth-tab="login">Entrar</button><button type="button" data-auth-tab="signup">Criar conta</button></div>
+      <form id="login-form" class="auth-form">
+        <label>E-mail<input id="login-email" type="email" autocomplete="email" required placeholder="voce@exemplo.com"></label>
+        <label>Senha<input id="login-password" type="password" autocomplete="current-password" required minlength="8" placeholder="Sua senha"></label>
+        <button class="primary" type="submit">Entrar</button>
+        <button class="text-button" type="button" id="forgot-password">Esqueci minha senha</button>
+      </form>
+      <form id="signup-form" class="auth-form" hidden>
+        <label>E-mail<input id="signup-email" type="email" autocomplete="email" required placeholder="voce@exemplo.com"></label>
+        <label>Crie uma senha<input id="signup-password" type="password" autocomplete="new-password" required minlength="8" placeholder="Pelo menos 8 caracteres"></label>
+        <label>Repita a senha<input id="signup-password-confirm" type="password" autocomplete="new-password" required minlength="8" placeholder="Repita sua senha"></label>
+        <button class="primary" type="submit">Criar conta gratuita</button>
+      </form>
+      <form id="recovery-form" class="auth-form" hidden>
+        <label>Seu e-mail<input id="recovery-email" type="email" autocomplete="email" required placeholder="voce@exemplo.com"></label>
+        <button class="primary" type="submit">Enviar link de recuperação</button>
+        <button class="text-button" type="button" data-auth-tab="login">Voltar para o login</button>
+      </form>
+      <form id="new-password-form" class="auth-form" hidden>
+        <label>Nova senha<input id="new-password" type="password" autocomplete="new-password" required minlength="8" placeholder="Pelo menos 8 caracteres"></label>
+        <button class="primary" type="submit">Atualizar senha</button>
+      </form>
+      <p class="auth-message" id="auth-message" aria-live="polite"></p>
+      <p class="security-note">🔒 Conexão criptografada. Cada usuário acessa somente os próprios registros.</p>
+    </article>
+  </section>
+
+  <div id="loading-screen" class="loading-screen" hidden><span class="spinner"></span><strong>Carregando suas finanças…</strong></div>
+
+  <main class="app-shell" id="app-shell" hidden>
+    <header class="app-header">
+      <div><small>FINANSYS</small><h1 id="page-title">Visão geral</h1></div>
+      <div class="header-actions"><button id="install-app" class="install-button" type="button" hidden>Instalar</button><button class="avatar" id="account-button" type="button" aria-label="Abrir opções da conta">F</button></div>
+      <div class="account-menu" id="account-menu" hidden><strong id="account-email"></strong><button id="logout-button" type="button">Sair da conta</button></div>
+    </header>
+
     <section class="view active" data-view="home">
-      <article class="balance-card"><span>Saldo deste mês</span><strong id="balance">R$ 0,00</strong><div><span class="positive" id="income">↑ R$ 0,00</span><span class="negative" id="expenses">↓ R$ 0,00</span></div></article>
-      <div class="quick-actions"><button data-action="expense"><b>−</b>Despesa</button><button data-action="income"><b>+</b>Receita</button><button data-tab="cards"><b>▣</b>Cartões</button><button data-tab="goals"><b>◎</b>Metas</button></div>
-      <div class="section-title"><h2>Movimentos recentes</h2><button data-tab="transactions">Ver todos</button></div>
+      <article class="balance-card"><span>Saldo deste mês</span><strong id="balance">R$ 0,00</strong><div><span id="income">↑ R$ 0,00</span><span id="expenses">↓ R$ 0,00</span></div></article>
+      <div class="quick-actions"><button type="button" data-action="expense"><b>−</b>Despesa</button><button type="button" data-action="income"><b>+</b>Receita</button><button type="button" data-tab="cards"><b>▣</b>Cartões</button><button type="button" data-tab="planning"><b>◎</b>Metas</button></div>
+      <div class="section-title"><h2>Movimentos recentes</h2><button type="button" data-tab="transactions">Ver todos</button></div>
       <div class="list" id="recent-list"></div>
+      <article class="sync-card"><span class="sync-dot"></span><div><strong>Dados sincronizados</strong><p>Suas alterações ficam disponíveis em qualquer dispositivo após o login.</p></div></article>
     </section>
-    <section class="view" data-view="transactions"><p class="lead">Seu histórico financeiro salvo nesta demonstração.</p><div class="list" id="transaction-list"></div></section>
-    <section class="view" data-view="cards"><article class="credit-card"><span>Cartão principal</span><strong>•••• 4821</strong><div><small>Fatura atual</small><b>R$ 1.284,90</b></div><div class="progress"><i style="width:42%"></i></div><small>42% do limite utilizado</small></article><article class="panel"><h2>Próximo vencimento</h2><p>12 de setembro · R$ 1.284,90</p></article></section>
-    <section class="view" data-view="goals"><article class="panel"><span class="goal-icon">◎</span><h2>Reserva de emergência</h2><strong>R$ 8.400 de R$ 20.000</strong><div class="progress"><i style="width:42%"></i></div><p>42% concluído · aporte mensal de R$ 800</p></article><article class="panel"><span class="goal-icon">✈</span><h2>Viagem</h2><strong>R$ 3.250 de R$ 9.000</strong><div class="progress"><i style="width:36%"></i></div><p>36% concluído · dezembro de 2027</p></article></section>
+
+    <section class="view" data-view="transactions">
+      <div class="page-intro"><div><h2>Lançamentos</h2><p>Receitas, despesas e parcelas.</p></div><button class="small-primary" type="button" data-action="expense">+ Novo</button></div>
+      <label class="search"><span>⌕</span><input id="transaction-search" type="search" placeholder="Buscar lançamento"></label>
+      <div class="list" id="transaction-list"></div>
+    </section>
+
+    <section class="view" data-view="cards">
+      <div class="page-intro"><div><h2>Cartões</h2><p>Acompanhe limites e vencimentos.</p></div><button class="small-primary" type="button" data-open-dialog="card-dialog">+ Cartão</button></div>
+      <div class="stack" id="cards-list"></div>
+    </section>
+
+    <section class="view" data-view="planning">
+      <div class="page-intro"><div><h2>Metas</h2><p>Planeje seus próximos passos.</p></div><button class="small-primary" type="button" data-open-dialog="goal-dialog">+ Meta</button></div>
+      <div class="stack" id="goals-list"></div>
+      <div class="page-intro subscriptions-heading"><div><h2>Assinaturas</h2><p>Custos recorrentes do mês.</p></div><button class="small-primary" type="button" data-open-dialog="subscription-dialog">+ Assinatura</button></div>
+      <div class="stack" id="subscriptions-list"></div>
+    </section>
   </main>
-  <nav class="tab-bar" aria-label="Navegação principal"><button class="active" data-tab="home"><b>⌂</b><span>Início</span></button><button data-tab="transactions"><b>↕</b><span>Movimentos</span></button><button class="add" data-action="expense" aria-label="Novo lançamento"><b>+</b></button><button data-tab="cards"><b>▣</b><span>Cartões</span></button><button data-tab="goals"><b>◎</b><span>Metas</span></button></nav>
-  <dialog id="entry-dialog"><form method="dialog" id="entry-form"><div class="dialog-head"><div><small>NOVO LANÇAMENTO</small><h2>Adicionar movimento</h2></div><button value="cancel" aria-label="Fechar">×</button></div><div class="segmented"><button type="button" data-kind="expense" class="active">Despesa</button><button type="button" data-kind="income">Receita</button></div><label>Descrição<input id="description" required maxlength="80" placeholder="Ex.: Supermercado"></label><label>Valor<input id="amount" required inputmode="decimal" placeholder="0,00"></label><label>Data<input id="date" required type="date"></label><p class="form-error" id="form-error"></p><button class="save" value="default">Salvar lançamento</button></form></dialog>
+
+  <nav class="tab-bar" id="tab-bar" aria-label="Navegação principal" hidden><button class="active" type="button" data-tab="home"><b>⌂</b><span>Início</span></button><button type="button" data-tab="transactions"><b>↕</b><span>Movimentos</span></button><button class="add" type="button" data-action="expense" aria-label="Novo lançamento"><b>+</b></button><button type="button" data-tab="cards"><b>▣</b><span>Cartões</span></button><button type="button" data-tab="planning"><b>◎</b><span>Planejar</span></button></nav>
+
+  <dialog id="transaction-dialog"><form id="transaction-form"><div class="dialog-head"><div><small>NOVO LANÇAMENTO</small><h2>Adicionar movimento</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><div class="segmented"><button type="button" data-kind="expense" class="active">Despesa</button><button type="button" data-kind="income">Receita</button></div><label>Descrição<input id="transaction-description" required maxlength="160" placeholder="Ex.: Supermercado"></label><div class="form-row"><label>Valor total<input id="transaction-amount" required inputmode="decimal" placeholder="0,00"></label><label>Data<input id="transaction-date" required type="date"></label></div><div class="form-row"><label>Categoria<select id="transaction-category"></select></label><label>Cartão<select id="transaction-card"></select></label></div><label>Parcelas<input id="transaction-installments" type="number" min="1" max="120" value="1"></label><label>Observações<textarea id="transaction-notes" maxlength="2000" placeholder="Opcional"></textarea></label><p class="form-error" id="transaction-error"></p><button class="primary" type="submit">Salvar lançamento</button></form></dialog>
+
+  <dialog id="card-dialog"><form id="card-form"><div class="dialog-head"><div><small>NOVO CARTÃO</small><h2>Adicionar cartão</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><label>Nome<input id="card-name" required maxlength="80" placeholder="Ex.: Nubank"></label><label>Bandeira<input id="card-brand" maxlength="40" placeholder="Ex.: Mastercard"></label><label>Limite<input id="card-limit" required inputmode="decimal" placeholder="0,00"></label><div class="form-row"><label>Fechamento<input id="card-closing" type="number" min="1" max="31"></label><label>Vencimento<input id="card-due" type="number" min="1" max="31"></label></div><p class="form-error" id="card-error"></p><button class="primary" type="submit">Salvar cartão</button></form></dialog>
+
+  <dialog id="goal-dialog"><form id="goal-form"><div class="dialog-head"><div><small>NOVA META</small><h2>Planejar objetivo</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><label>Nome<input id="goal-name" required maxlength="100" placeholder="Ex.: Reserva de emergência"></label><div class="form-row"><label>Valor desejado<input id="goal-target" required inputmode="decimal" placeholder="0,00"></label><label>Valor atual<input id="goal-current" inputmode="decimal" value="0"></label></div><label>Aporte mensal<input id="goal-monthly" inputmode="decimal" value="0"></label><label>Data desejada<input id="goal-date" type="date"></label><p class="form-error" id="goal-error"></p><button class="primary" type="submit">Salvar meta</button></form></dialog>
+
+  <dialog id="subscription-dialog"><form id="subscription-form"><div class="dialog-head"><div><small>NOVA ASSINATURA</small><h2>Adicionar recorrência</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><label>Nome<input id="subscription-name" required maxlength="100" placeholder="Ex.: Streaming"></label><div class="form-row"><label>Valor mensal<input id="subscription-amount" required inputmode="decimal" placeholder="0,00"></label><label>Dia da cobrança<input id="subscription-day" required type="number" min="1" max="31"></label></div><label>Cartão<select id="subscription-card"></select></label><p class="form-error" id="subscription-error"></p><button class="primary" type="submit">Salvar assinatura</button></form></dialog>
+
   <script src="app.js"></script>
 </body>
 </html>

@@ -48,10 +48,14 @@ def test_api_dashboard_and_installment_creation():
         session.commit()
 
 
-def test_pages_preview_is_explicitly_separate():
+def test_pages_app_uses_supabase_and_is_built_separately():
     root = Path(__file__).resolve().parent.parent
     html = (root / "pages-preview" / "index.html").read_text(encoding="utf-8")
     workflow = (root / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")
-    assert "Prévia demonstrativa" in html
-    assert "FastAPI não roda no GitHub Pages" in html
+    source = (root / "pages-preview" / "src" / "app.js").read_text(encoding="utf-8")
+    assert 'id="login-form"' in html
+    assert "supabase.co" in html
+    assert "createClient" in source
+    assert "service_role" not in source.lower()
+    assert "npm run build" in workflow
     assert "path: pages-preview" in workflow
