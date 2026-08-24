@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d10">
+  <meta name="color-scheme" content="dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://jrbemrqahgnabqrrvhqb.supabase.co; connect-src 'self' https://jrbemrqahgnabqrrvhqb.supabase.co wss://jrbemrqahgnabqrrvhqb.supabase.co; base-uri 'none'; form-action 'self'">
+  <title>FinanSys · Finanças pessoais</title>
+  <meta name="description" content="Aplicativo seguro para organizar suas finanças pessoais.">
+  <link rel="manifest" href="manifest.webmanifest?v=11">
+  <link rel="icon" href="app-icon.svg?v=11" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v=11">
+</head>
+<body>
+  <svg class="icon-sprite" aria-hidden="true">
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.8 8.3 7 10 4.2-1.7 7-5.4 7-10V6l-7-3Z"/><path d="m9.5 12 1.7 1.7 3.7-4"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8"/><path d="M5.5 9.5V21h13V9.5M9 21v-6h6v6"/></symbol>
+    <symbol id="i-movements" viewBox="0 0 24 24"><path d="M7 3v18m0 0-3-3m3 3 3-3M17 21V3m0 0-3 3m3-3 3 3"/></symbol>
+    <symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-income" viewBox="0 0 24 24"><path d="M12 19V5m0 0-5 5m5-5 5 5"/></symbol>
+    <symbol id="i-expense" viewBox="0 0 24 24"><path d="M12 5v14m0 0-5-5m5 5 5-5"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H19v14H6.5A2.5 2.5 0 0 1 4 16.5v-9Z"/><path d="M4 8h15M15 12h6v4h-6a2 2 0 1 1 0-4Z"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+    <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="m3 3 18 18M10.6 6.1A10.5 10.5 0 0 1 12 6c6 0 9.5 6 9.5 6a16 16 0 0 1-2.3 3M6.4 6.4C3.8 8.2 2.5 12 2.5 12s3.5 6 9.5 6c1.5 0 2.8-.4 4-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4l11-11-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 7h4l2-2h4l2 2h4v12H4V7Z"/><circle cx="12" cy="13" r="3"/></symbol>
+  </svg>
+  <div class="network-banner" id="network-banner" hidden>Você está sem conexão. Seus dados serão carregados quando a internet voltar.</div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <section class="auth-screen" id="auth-screen">
+    <div class="auth-brand"><img src="app-icon.svg?v=11" width="54" height="54" alt=""><div><strong>FinanSys</strong><span>Seu dinheiro, sob controle.</span></div></div>
+    <article class="auth-card">
+      <div class="auth-heading"><small>ACESSO SEGURO</small><h1 id="auth-title">Entre na sua conta</h1><p id="auth-description">Seus dados ficam sincronizados e protegidos por usuário.</p></div>
+      <div class="auth-tabs" id="auth-tabs" role="tablist"><button type="button" class="active" data-auth-tab="login">Entrar</button><button type="button" data-auth-tab="signup">Criar conta</button></div>
+      <form id="login-form" class="auth-form" novalidate>
+        <label>E-mail<input id="login-email" type="email" autocomplete="email" required placeholder="voce@exemplo.com"></label>
+        <label>Senha<span class="password-field"><input id="login-password" type="password" autocomplete="current-password" required minlength="8" placeholder="Sua senha"><button type="button" data-password-toggle="login-password" aria-label="Mostrar senha"><svg class="icon"><use href="#i-eye"/></svg></button></span></label>
+        <button class="primary auth-submit" type="submit"><span>Entrar</span><svg class="icon"><use href="#i-arrow-right"/></svg></button>
+        <button class="text-button" type="button" id="forgot-password">Esqueci minha senha</button>
+      </form>
+      <form id="signup-form" class="auth-form" hidden novalidate>
+        <label>E-mail<input id="signup-email" type="email" autocomplete="email" required placeholder="voce@exemplo.com"></label>
+        <label>Crie uma senha<span class="password-field"><input id="signup-password" type="password" autocomplete="new-password" required minlength="8" placeholder="Pelo menos 8 caracteres"><button type="button" data-password-toggle="signup-password" aria-label="Mostrar senha"><svg class="icon"><use href="#i-eye"/></svg></button></span></label>
+        <label>Repita a senha<span class="password-field"><input id="signup-password-confirm" type="password" autocomplete="new-password" required minlength="8" placeholder="Repita sua senha"><button type="button" data-password-toggle="signup-password-confirm" aria-label="Mostrar senha"><svg class="icon"><use href="#i-eye"/></svg></button></span></label>
+        <button class="primary auth-submit" type="submit"><span>Criar conta gratuita</span><svg class="icon"><use href="#i-arrow-right"/></svg></button>
+      </form>
+      <form id="recovery-form" class="auth-form" hidden novalidate>
+        <label>Seu e-mail<input id="recovery-email" type="email" autocomplete="email" required placeholder="voce@exemplo.com"></label>
+        <button class="primary auth-submit" type="submit"><span>Enviar link de recuperação</span><svg class="icon"><use href="#i-arrow-right"/></svg></button>
+        <button class="text-button" type="button" data-auth-tab="login">Voltar para o login</button>
+      </form>
+      <form id="new-password-form" class="auth-form" hidden novalidate>
+        <label>Nova senha<span class="password-field"><input id="new-password" type="password" autocomplete="new-password" required minlength="8" placeholder="Pelo menos 8 caracteres"><button type="button" data-password-toggle="new-password" aria-label="Mostrar senha"><svg class="icon"><use href="#i-eye"/></svg></button></span></label>
+        <button class="primary auth-submit" type="submit"><span>Atualizar senha</span><svg class="icon"><use href="#i-arrow-right"/></svg></button>
+      </form>
+      <p class="auth-message" id="auth-message" role="status" aria-live="polite" aria-atomic="true"></p>
+      <p class="security-note"><svg class="icon"><use href="#i-shield"/></svg>Conexão criptografada. Cada usuário acessa somente os próprios registros.</p>
+    </article>
+  </section>
+
+  <div id="loading-screen" class="loading-screen" hidden><span class="spinner"></span><strong>Carregando suas finanças…</strong></div>
+
+  <main class="app-shell" id="app-shell" hidden>
+    <header class="app-header">
+      <div class="app-heading"><small>FINANSYS</small><span id="welcome-copy">Bem-vindo de volta</span><h1 id="page-title">Visão geral</h1></div>
+      <div class="header-actions"><button id="install-app" class="install-button" type="button" hidden>Instalar</button><button class="avatar" id="account-button" type="button" aria-label="Abrir opções da conta">F</button></div>
+      <div class="account-menu" id="account-menu" hidden><strong id="account-email"></strong><button id="logout-button" type="button">Sair da conta</button></div>
+    </header>
+
+    <section class="view active" data-view="home">
+      <article class="balance-card"><div class="balance-card-head"><span>Resultado deste mês</span><svg class="icon"><use href="#i-wallet"/></svg></div><strong id="balance">R$ 0,00</strong><div class="balance-breakdown"><span><svg class="icon"><use href="#i-income"/></svg><span id="income">R$ 0,00</span></span><span><svg class="icon"><use href="#i-expense"/></svg><span id="expenses">R$ 0,00</span></span></div></article>
+      <article class="forecast-card">
+        <div class="forecast-head"><div><small>PROJEÇÃO POR DATA</small><h2>Quanto restará?</h2></div><label class="date-control"><svg class="icon"><use href="#i-calendar"/></svg><input id="forecast-date" type="date" aria-label="Data da projeção"></label></div>
+        <div class="forecast-result"><span>Saldo acumulado até a data</span><strong id="forecast-balance">R$ 0,00</strong><p id="forecast-caption">Com base nos lançamentos cadastrados.</p></div>
+        <div class="forecast-day"><span><small>ENTRA NO DIA</small><strong id="forecast-day-income">R$ 0,00</strong></span><span><small>SAI NO DIA</small><strong id="forecast-day-expense">R$ 0,00</strong></span></div>
+        <div class="forecast-presets" aria-label="Atalhos de projeção"><button type="button" data-forecast-preset="7">Em 7 dias</button><button type="button" data-forecast-preset="15">Em 15 dias</button><button type="button" data-forecast-preset="month">Fim do mês</button></div>
+      </article>
+      <div class="quick-actions"><button type="button" data-action="expense"><b><svg class="icon"><use href="#i-minus"/></svg></b>Despesa</button><button type="button" data-action="income"><b><svg class="icon"><use href="#i-plus"/></svg></b>Receita</button><button type="button" data-tab="cards"><b><svg class="icon"><use href="#i-card"/></svg></b>Cartões</button><button type="button" data-tab="planning"><b><svg class="icon"><use href="#i-target"/></svg></b>Metas</button></div>
+      <div class="section-title"><h2>Movimentos recentes</h2><button type="button" data-tab="transactions">Ver todos</button></div>
+      <div class="list" id="recent-list"></div>
+      <article class="sync-card"><span class="sync-dot"></span><div><strong>Dados sincronizados</strong><p>Suas alterações ficam disponíveis em qualquer dispositivo após o login.</p></div></article>
+    </section>
+
+    <section class="view" data-view="transactions">
+      <div class="page-intro"><div><h2>Lançamentos</h2><p>Busque por texto, dia ou período.</p></div><button class="small-primary" type="button" data-action="expense"><svg class="icon"><use href="#i-plus"/></svg>Novo</button></div>
+      <section class="filters-card">
+        <label class="search"><svg class="icon"><use href="#i-search"/></svg><input id="transaction-search" type="search" placeholder="Buscar lançamento"></label>
+        <div class="date-range"><label>De<input id="filter-date-start" type="date"></label><label>Até<input id="filter-date-end" type="date"></label></div>
+        <div class="filter-presets" aria-label="Filtros rápidos"><button type="button" data-date-preset="today">Hoje</button><button type="button" data-date-preset="7">Próximos 7 dias</button><button type="button" data-date-preset="month">Este mês</button><button class="active" type="button" data-date-preset="all">Tudo</button></div>
+        <div class="period-summary"><span><small id="period-count">0 LANÇAMENTOS</small><strong id="period-balance">R$ 0,00</strong></span><span><small>ENTRADAS</small><strong id="period-income">R$ 0,00</strong></span><span><small>SAÍDAS</small><strong id="period-expenses">R$ 0,00</strong></span></div>
+      </section>
+      <div class="list" id="transaction-list"></div>
+    </section>
+
+    <section class="view" data-view="cards">
+      <div class="page-intro"><div><h2>Cartões</h2><p>Acompanhe limites e vencimentos.</p></div><button class="small-primary" type="button" data-open-dialog="card-dialog">+ Cartão</button></div>
+      <div class="stack" id="cards-list"></div>
+    </section>
+
+    <section class="view" data-view="planning">
+      <div class="page-intro"><div><h2>Metas</h2><p>Planeje seus próximos passos.</p></div><button class="small-primary" type="button" data-open-dialog="goal-dialog">+ Meta</button></div>
+      <div class="stack" id="goals-list"></div>
+      <div class="page-intro subscriptions-heading"><div><h2>Assinaturas</h2><p>Custos recorrentes do mês.</p></div><button class="small-primary" type="button" data-open-dialog="subscription-dialog">+ Assinatura</button></div>
+      <div class="stack" id="subscriptions-list"></div>
+    </section>
+  </main>
+
+  <nav class="tab-bar" id="tab-bar" aria-label="Navegação principal" hidden><button class="active" type="button" data-tab="home" aria-current="page"><b><svg class="icon"><use href="#i-home"/></svg></b><span>Início</span></button><button type="button" data-tab="transactions"><b><svg class="icon"><use href="#i-movements"/></svg></b><span>Movimentos</span></button><button class="add" type="button" data-action="expense" aria-label="Novo lançamento"><b><svg class="icon"><use href="#i-plus"/></svg></b></button><button type="button" data-tab="cards"><b><svg class="icon"><use href="#i-card"/></svg></b><span>Cartões</span></button><button type="button" data-tab="planning"><b><svg class="icon"><use href="#i-target"/></svg></b><span>Planejar</span></button></nav>
+
+  <dialog id="transaction-dialog"><form id="transaction-form"><div class="dialog-head"><div><small id="transaction-dialog-eyebrow">NOVO LANÇAMENTO</small><h2 id="transaction-dialog-title">Adicionar movimento</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><div class="segmented"><button type="button" data-kind="expense" class="active">Despesa</button><button type="button" data-kind="income">Receita</button></div><label>Descrição<input id="transaction-description" required maxlength="160" placeholder="Ex.: Supermercado"></label><div class="form-row"><label>Valor total<input id="transaction-amount" required inputmode="decimal" placeholder="0,00"></label><label>Data<input id="transaction-date" required type="date"></label></div><div class="form-row"><label>Categoria<select id="transaction-category"></select></label><label>Cartão<select id="transaction-card"></select></label></div><label id="installments-field">Parcelas<input id="transaction-installments" type="number" min="1" max="120" value="1"><small id="installments-help">O total será dividido entre os meses.</small></label><label>Observações<textarea id="transaction-notes" maxlength="2000" placeholder="Opcional"></textarea></label><div class="receipt-field"><span>Comprovante ou foto</span><label class="file-picker" for="transaction-receipt"><svg class="icon"><use href="#i-camera"/></svg><span id="receipt-label">Escolher da câmera ou galeria</span><input id="transaction-receipt" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif"></label><small>Imagem privada, até 5 MB. JPG, PNG, WebP ou HEIC.</small><label class="remove-receipt" id="remove-receipt-field" hidden><input id="remove-receipt" type="checkbox"> Remover foto atual</label></div><p class="form-error" id="transaction-error"></p><button class="primary" id="transaction-submit" type="submit">Salvar lançamento</button></form></dialog>
+
+  <dialog id="receipt-dialog" class="receipt-dialog"><div class="receipt-viewer"><div class="dialog-head"><div><small>COMPROVANTE PRIVADO</small><h2>Foto do lançamento</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><div class="receipt-loading" id="receipt-loading">Carregando imagem…</div><img id="receipt-image" alt="Comprovante do lançamento" hidden></div></dialog>
+
+  <dialog id="card-dialog"><form id="card-form"><div class="dialog-head"><div><small>NOVO CARTÃO</small><h2>Adicionar cartão</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><label>Nome<input id="card-name" required maxlength="80" placeholder="Ex.: Nubank"></label><label>Bandeira<input id="card-brand" maxlength="40" placeholder="Ex.: Mastercard"></label><label>Limite<input id="card-limit" required inputmode="decimal" placeholder="0,00"></label><div class="form-row"><label>Fechamento<input id="card-closing" type="number" min="1" max="31"></label><label>Vencimento<input id="card-due" type="number" min="1" max="31"></label></div><p class="form-error" id="card-error"></p><button class="primary" type="submit">Salvar cartão</button></form></dialog>
+
+  <dialog id="goal-dialog"><form id="goal-form"><div class="dialog-head"><div><small>NOVA META</small><h2>Planejar objetivo</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><label>Nome<input id="goal-name" required maxlength="100" placeholder="Ex.: Reserva de emergência"></label><div class="form-row"><label>Valor desejado<input id="goal-target" required inputmode="decimal" placeholder="0,00"></label><label>Valor atual<input id="goal-current" inputmode="decimal" value="0"></label></div><label>Aporte mensal<input id="goal-monthly" inputmode="decimal" value="0"></label><label>Data desejada<input id="goal-date" type="date"></label><p class="form-error" id="goal-error"></p><button class="primary" type="submit">Salvar meta</button></form></dialog>
+
+  <dialog id="subscription-dialog"><form id="subscription-form"><div class="dialog-head"><div><small>NOVA ASSINATURA</small><h2>Adicionar recorrência</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><label>Nome<input id="subscription-name" required maxlength="100" placeholder="Ex.: Streaming"></label><div class="form-row"><label>Valor mensal<input id="subscription-amount" required inputmode="decimal" placeholder="0,00"></label><label>Dia da cobrança<input id="subscription-day" required type="number" min="1" max="31"></label></div><label>Cartão<select id="subscription-card"></select></label><p class="form-error" id="subscription-error"></p><button class="primary" type="submit">Salvar assinatura</button></form></dialog>
+
+  <script src="app.js?v=11"></script>
+</body>
+</html>

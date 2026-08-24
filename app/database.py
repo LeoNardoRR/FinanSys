@@ -8,7 +8,8 @@ class Base(DeclarativeBase):
     pass
 
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+engine_options = {"connect_args": {"check_same_thread": False}} if DATABASE_URL.startswith("sqlite") else {}
+engine = create_engine(DATABASE_URL, **engine_options)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
 
@@ -29,13 +30,14 @@ def initialize_database() -> None:
     from app.services.seed import seed_defaults
 
     Base.metadata.create_all(bind=engine)
-    with engine.begin() as connection:
-        _add_column(connection, "goals", "monthly_contribution", "NUMERIC(12, 2) NOT NULL DEFAULT 0")
-        _add_column(connection, "transactions", "person_id", "INTEGER")
-        _add_column(connection, "transactions", "installment_group", "VARCHAR(36)")
-        _add_column(connection, "transactions", "purchase_id", "INTEGER")
-        _add_column(connection, "subscriptions", "person_id", "INTEGER")
-        _add_column(connection, "subscriptions", "last_generated_on", "DATE")
+    if DATABASE_URL.startswith("sqlite"):
+        with engine.begin() as connection:
+            _add_column(connection, "goals", "monthly_contribution", "NUMERIC(12, 2) NOT NULL DEFAULT 0")
+            _add_column(connection, "transactions", "person_id", "INTEGER")
+            _add_column(connection, "transactions", "installment_group", "VARCHAR(36)")
+            _add_column(connection, "transactions", "purchase_id", "INTEGER")
+            _add_column(connection, "subscriptions", "person_id", "INTEGER")
+            _add_column(connection, "subscriptions", "last_generated_on", "DATE")
 
     with SessionLocal() as session:
         seed_defaults(session)

@@ -28,6 +28,10 @@ tests/backup_test_runtime/
 .env
 .env.*
 !.env.example
+.npm-cache/
+mobile/node_modules/
+mobile/.expo/
+pages-preview/node_modules/
 
 # Editors and operating systems
 .vscode/

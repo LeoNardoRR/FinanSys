@@ -4,8 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#1d4ed8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>{{ page_title }} · FinanSys</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='css/app.css') }}">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/app-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', path='css/app.css') }}?v=mobile-pwa-1">
   <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
   {% block head %}{% endblock %}
 </head>
@@ -30,7 +35,10 @@
       <a href="/settings" class="nav-item {% if request.url.path.startswith('/settings') %}active{% endif %}"><span class="nav-icon"><svg aria-hidden="true"><use href="/static/icons.svg#icon-settings"></use></svg></span><span>Configurações</span></a>
       <a href="/help" class="nav-item {% if request.url.path.startswith('/help') %}active{% endif %}"><span class="nav-icon"><svg aria-hidden="true"><use href="/static/icons.svg#icon-help"></use></svg></span><span>Como usar</span></a>
     </nav>
-    <div class="sidebar-footer"><svg class="inline-icon" aria-hidden="true"><use href="/static/icons.svg#icon-lock"></use></svg> Dados salvos apenas neste computador.</div>
+    <div class="sidebar-footer">
+      <button class="install-app" id="install-app-button" type="button" hidden>Instalar aplicativo</button>
+      <span><svg class="inline-icon" aria-hidden="true"><use href="/static/icons.svg#icon-lock"></use></svg> Dados salvos apenas neste computador.</span>
+    </div>
   </aside>
   <main class="main">
     <header class="topbar">
@@ -44,7 +52,15 @@
     </section>
   </main>
   <div class="sidebar-overlay" onclick="document.body.classList.remove('menu-open')"></div>
+  <nav class="mobile-nav" aria-label="Navegação móvel">
+    <a href="/" class="{% if request.url.path == '/' %}active{% endif %}"><svg aria-hidden="true"><use href="/static/icons.svg#icon-home"></use></svg><span>Início</span></a>
+    <a href="/transactions" class="{% if request.url.path.startswith('/transactions') %}active{% endif %}"><svg aria-hidden="true"><use href="/static/icons.svg#icon-transactions"></use></svg><span>Movimentos</span></a>
+    <a href="/transactions#novo-lancamento" class="mobile-add" aria-label="Novo lançamento"><span>+</span></a>
+    <a href="/cards" class="{% if request.url.path.startswith('/cards') %}active{% endif %}"><svg aria-hidden="true"><use href="/static/icons.svg#icon-card"></use></svg><span>Cartões</span></a>
+    <button id="mobile-more" type="button"><svg aria-hidden="true"><use href="/static/icons.svg#icon-menu"></use></svg><span>Mais</span></button>
+  </nav>
   <script src="{{ url_for('static', path='js/theme.js') }}"></script>
+  <script src="{{ url_for('static', path='js/pwa.js') }}?v=mobile-pwa-1"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
