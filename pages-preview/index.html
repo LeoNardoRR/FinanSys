@@ -8,9 +8,9 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://jrbemrqahgnabqrrvhqb.supabase.co wss://jrbemrqahgnabqrrvhqb.supabase.co; base-uri 'none'; form-action 'self'">
   <title>FinanSys · Finanças pessoais</title>
   <meta name="description" content="Aplicativo seguro para organizar suas finanças pessoais.">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="app-icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="manifest" href="manifest.webmanifest?v=10">
+  <link rel="icon" href="app-icon.svg?v=10" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v=10">
 </head>
 <body>
   <svg class="icon-sprite" aria-hidden="true">
@@ -35,7 +35,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
   <section class="auth-screen" id="auth-screen">
-    <div class="auth-brand"><img src="app-icon.svg" width="54" height="54" alt=""><div><strong>FinanSys</strong><span>Seu dinheiro, sob controle.</span></div></div>
+    <div class="auth-brand"><img src="app-icon.svg?v=10" width="54" height="54" alt=""><div><strong>FinanSys</strong><span>Seu dinheiro, sob controle.</span></div></div>
     <article class="auth-card">
       <div class="auth-heading"><small>ACESSO SEGURO</small><h1 id="auth-title">Entre na sua conta</h1><p id="auth-description">Seus dados ficam sincronizados e protegidos por usuário.</p></div>
       <div class="auth-tabs" id="auth-tabs" role="tablist"><button type="button" class="active" data-auth-tab="login">Entrar</button><button type="button" data-auth-tab="signup">Criar conta</button></div>
@@ -122,6 +122,6 @@
 
   <dialog id="subscription-dialog"><form id="subscription-form"><div class="dialog-head"><div><small>NOVA ASSINATURA</small><h2>Adicionar recorrência</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><label>Nome<input id="subscription-name" required maxlength="100" placeholder="Ex.: Streaming"></label><div class="form-row"><label>Valor mensal<input id="subscription-amount" required inputmode="decimal" placeholder="0,00"></label><label>Dia da cobrança<input id="subscription-day" required type="number" min="1" max="31"></label></div><label>Cartão<select id="subscription-card"></select></label><p class="form-error" id="subscription-error"></p><button class="primary" type="submit">Salvar assinatura</button></form></dialog>
 
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

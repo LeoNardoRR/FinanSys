@@ -81,6 +81,7 @@ def test_pages_auth_has_resilient_feedback_and_accessible_controls():
     assert 'error?.code === "invalid_credentials"' in source
     assert 'error?.code === "email_not_confirmed"' in source
     assert "form.toggleAttribute(\"aria-busy\", busy)" in source
-    assert "finansys-app-v9" in worker
-    assert "styles.css?v=9" in html
-    assert "app.js?v=9" in html
+    assert "finansys-app-v10" in worker
+    assert "styles.css?v=10" in html
+    assert "app.js?v=10" in html
+    assert "app-icon.svg?v=10" in html
