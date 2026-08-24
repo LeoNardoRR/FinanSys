@@ -10,9 +10,24 @@
   <meta name="description" content="Aplicativo seguro para organizar suas finanças pessoais.">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="app-icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
+  <svg class="icon-sprite" aria-hidden="true">
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.8 8.3 7 10 4.2-1.7 7-5.4 7-10V6l-7-3Z"/><path d="m9.5 12 1.7 1.7 3.7-4"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8"/><path d="M5.5 9.5V21h13V9.5M9 21v-6h6v6"/></symbol>
+    <symbol id="i-movements" viewBox="0 0 24 24"><path d="M7 3v18m0 0-3-3m3 3 3-3M17 21V3m0 0-3 3m3-3 3 3"/></symbol>
+    <symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-income" viewBox="0 0 24 24"><path d="M12 19V5m0 0-5 5m5-5 5 5"/></symbol>
+    <symbol id="i-expense" viewBox="0 0 24 24"><path d="M12 5v14m0 0-5-5m5 5 5-5"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H19v14H6.5A2.5 2.5 0 0 1 4 16.5v-9Z"/><path d="M4 8h15M15 12h6v4h-6a2 2 0 1 1 0-4Z"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  </svg>
   <div class="network-banner" id="network-banner" hidden>Você está sem conexão. Seus dados serão carregados quando a internet voltar.</div>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
@@ -43,7 +58,7 @@
         <button class="primary" type="submit">Atualizar senha</button>
       </form>
       <p class="auth-message" id="auth-message" aria-live="polite"></p>
-      <p class="security-note">🔒 Conexão criptografada. Cada usuário acessa somente os próprios registros.</p>
+      <p class="security-note"><svg class="icon"><use href="#i-shield"/></svg>Conexão criptografada. Cada usuário acessa somente os próprios registros.</p>
     </article>
   </section>
 
@@ -57,16 +72,27 @@
     </header>
 
     <section class="view active" data-view="home">
-      <article class="balance-card"><span>Saldo deste mês</span><strong id="balance">R$ 0,00</strong><div><span id="income">↑ R$ 0,00</span><span id="expenses">↓ R$ 0,00</span></div></article>
-      <div class="quick-actions"><button type="button" data-action="expense"><b>−</b>Despesa</button><button type="button" data-action="income"><b>+</b>Receita</button><button type="button" data-tab="cards"><b>▣</b>Cartões</button><button type="button" data-tab="planning"><b>◎</b>Metas</button></div>
+      <article class="balance-card"><div class="balance-card-head"><span>Resultado deste mês</span><svg class="icon"><use href="#i-wallet"/></svg></div><strong id="balance">R$ 0,00</strong><div class="balance-breakdown"><span><svg class="icon"><use href="#i-income"/></svg><span id="income">R$ 0,00</span></span><span><svg class="icon"><use href="#i-expense"/></svg><span id="expenses">R$ 0,00</span></span></div></article>
+      <article class="forecast-card">
+        <div class="forecast-head"><div><small>PROJEÇÃO POR DATA</small><h2>Quanto restará?</h2></div><label class="date-control"><svg class="icon"><use href="#i-calendar"/></svg><input id="forecast-date" type="date" aria-label="Data da projeção"></label></div>
+        <div class="forecast-result"><span>Saldo acumulado até a data</span><strong id="forecast-balance">R$ 0,00</strong><p id="forecast-caption">Com base nos lançamentos cadastrados.</p></div>
+        <div class="forecast-day"><span><small>ENTRA NO DIA</small><strong id="forecast-day-income">R$ 0,00</strong></span><span><small>SAI NO DIA</small><strong id="forecast-day-expense">R$ 0,00</strong></span></div>
+        <div class="forecast-presets" aria-label="Atalhos de projeção"><button type="button" data-forecast-preset="7">Em 7 dias</button><button type="button" data-forecast-preset="15">Em 15 dias</button><button type="button" data-forecast-preset="month">Fim do mês</button></div>
+      </article>
+      <div class="quick-actions"><button type="button" data-action="expense"><b><svg class="icon"><use href="#i-minus"/></svg></b>Despesa</button><button type="button" data-action="income"><b><svg class="icon"><use href="#i-plus"/></svg></b>Receita</button><button type="button" data-tab="cards"><b><svg class="icon"><use href="#i-card"/></svg></b>Cartões</button><button type="button" data-tab="planning"><b><svg class="icon"><use href="#i-target"/></svg></b>Metas</button></div>
       <div class="section-title"><h2>Movimentos recentes</h2><button type="button" data-tab="transactions">Ver todos</button></div>
       <div class="list" id="recent-list"></div>
       <article class="sync-card"><span class="sync-dot"></span><div><strong>Dados sincronizados</strong><p>Suas alterações ficam disponíveis em qualquer dispositivo após o login.</p></div></article>
     </section>
 
     <section class="view" data-view="transactions">
-      <div class="page-intro"><div><h2>Lançamentos</h2><p>Receitas, despesas e parcelas.</p></div><button class="small-primary" type="button" data-action="expense">+ Novo</button></div>
-      <label class="search"><span>⌕</span><input id="transaction-search" type="search" placeholder="Buscar lançamento"></label>
+      <div class="page-intro"><div><h2>Lançamentos</h2><p>Busque por texto, dia ou período.</p></div><button class="small-primary" type="button" data-action="expense"><svg class="icon"><use href="#i-plus"/></svg>Novo</button></div>
+      <section class="filters-card">
+        <label class="search"><svg class="icon"><use href="#i-search"/></svg><input id="transaction-search" type="search" placeholder="Buscar lançamento"></label>
+        <div class="date-range"><label>De<input id="filter-date-start" type="date"></label><label>Até<input id="filter-date-end" type="date"></label></div>
+        <div class="filter-presets" aria-label="Filtros rápidos"><button type="button" data-date-preset="today">Hoje</button><button type="button" data-date-preset="7">Próximos 7 dias</button><button type="button" data-date-preset="month">Este mês</button><button class="active" type="button" data-date-preset="all">Tudo</button></div>
+        <div class="period-summary"><span><small id="period-count">0 LANÇAMENTOS</small><strong id="period-balance">R$ 0,00</strong></span><span><small>ENTRADAS</small><strong id="period-income">R$ 0,00</strong></span><span><small>SAÍDAS</small><strong id="period-expenses">R$ 0,00</strong></span></div>
+      </section>
       <div class="list" id="transaction-list"></div>
     </section>
 
@@ -83,7 +109,7 @@
     </section>
   </main>
 
-  <nav class="tab-bar" id="tab-bar" aria-label="Navegação principal" hidden><button class="active" type="button" data-tab="home"><b>⌂</b><span>Início</span></button><button type="button" data-tab="transactions"><b>↕</b><span>Movimentos</span></button><button class="add" type="button" data-action="expense" aria-label="Novo lançamento"><b>+</b></button><button type="button" data-tab="cards"><b>▣</b><span>Cartões</span></button><button type="button" data-tab="planning"><b>◎</b><span>Planejar</span></button></nav>
+  <nav class="tab-bar" id="tab-bar" aria-label="Navegação principal" hidden><button class="active" type="button" data-tab="home" aria-current="page"><b><svg class="icon"><use href="#i-home"/></svg></b><span>Início</span></button><button type="button" data-tab="transactions"><b><svg class="icon"><use href="#i-movements"/></svg></b><span>Movimentos</span></button><button class="add" type="button" data-action="expense" aria-label="Novo lançamento"><b><svg class="icon"><use href="#i-plus"/></svg></b></button><button type="button" data-tab="cards"><b><svg class="icon"><use href="#i-card"/></svg></b><span>Cartões</span></button><button type="button" data-tab="planning"><b><svg class="icon"><use href="#i-target"/></svg></b><span>Planejar</span></button></nav>
 
   <dialog id="transaction-dialog"><form id="transaction-form"><div class="dialog-head"><div><small>NOVO LANÇAMENTO</small><h2>Adicionar movimento</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><div class="segmented"><button type="button" data-kind="expense" class="active">Despesa</button><button type="button" data-kind="income">Receita</button></div><label>Descrição<input id="transaction-description" required maxlength="160" placeholder="Ex.: Supermercado"></label><div class="form-row"><label>Valor total<input id="transaction-amount" required inputmode="decimal" placeholder="0,00"></label><label>Data<input id="transaction-date" required type="date"></label></div><div class="form-row"><label>Categoria<select id="transaction-category"></select></label><label>Cartão<select id="transaction-card"></select></label></div><label>Parcelas<input id="transaction-installments" type="number" min="1" max="120" value="1"></label><label>Observações<textarea id="transaction-notes" maxlength="2000" placeholder="Opcional"></textarea></label><p class="form-error" id="transaction-error"></p><button class="primary" type="submit">Salvar lançamento</button></form></dialog>
 
@@ -93,6 +119,6 @@
 
   <dialog id="subscription-dialog"><form id="subscription-form"><div class="dialog-head"><div><small>NOVA ASSINATURA</small><h2>Adicionar recorrência</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><label>Nome<input id="subscription-name" required maxlength="100" placeholder="Ex.: Streaming"></label><div class="form-row"><label>Valor mensal<input id="subscription-amount" required inputmode="decimal" placeholder="0,00"></label><label>Dia da cobrança<input id="subscription-day" required type="number" min="1" max="31"></label></div><label>Cartão<select id="subscription-card"></select></label><p class="form-error" id="subscription-error"></p><button class="primary" type="submit">Salvar assinatura</button></form></dialog>
 
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

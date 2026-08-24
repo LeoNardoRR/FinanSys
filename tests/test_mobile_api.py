@@ -57,5 +57,10 @@ def test_pages_app_uses_supabase_and_is_built_separately():
     assert "supabase.co" in html
     assert "createClient" in source
     assert "service_role" not in source.lower()
+    assert 'id="forecast-date"' in html
+    assert 'id="filter-date-start"' in html
+    assert 'id="filter-date-end"' in html
+    assert "renderForecast" in source
+    assert "🔒" not in html
     assert "npm run build" in workflow
     assert "path: pages-preview" in workflow

@@ -7,7 +7,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {persistSession: true, autoRefreshToken: true, detectSessionInUrl: true},
 });
 
-const state = {user: null, transactions: [], categories: [], cards: [], goals: [], subscriptions: [], kind: "expense"};
+const state = {user: null, transactions: [], categories: [], cards: [], goals: [], subscriptions: [], kind: "expense", datePreset: "all"};
 const money = new Intl.NumberFormat("pt-BR", {style: "currency", currency: "BRL"});
 const titles = {home: "Visão geral", transactions: "Movimentações", cards: "Cartões", planning: "Planejamento"};
 const defaults = [
@@ -21,8 +21,17 @@ const defaults = [
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const escapeHtml = (value = "") => { const node = document.createElement("span"); node.textContent = String(value); return node.innerHTML; };
+const icon = (name) => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const valueOf = (selector) => $(selector).value.trim();
 const optionalInt = (selector) => valueOf(selector) ? Number(valueOf(selector)) : null;
+
+function isoDate(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function offsetDate(days) { const date = new Date(); date.setDate(date.getDate() + days); return isoDate(date); }
+function monthBoundary(position = "end") { const now = new Date(); return isoDate(position === "start" ? new Date(now.getFullYear(), now.getMonth(), 1) : new Date(now.getFullYear(), now.getMonth() + 1, 0)); }
+function signedAmount(item) { return (item.kind === "income" ? 1 : -1) * Number(item.amount); }
 
 function parseMoney(value) {
   const normalized = String(value).trim().replace(/\s/g, "");
@@ -100,7 +109,7 @@ async function loadData() {
 }
 
 function render() {
-  renderDashboard(); renderTransactions(); renderCards(); renderGoals(); renderSubscriptions(); updateSelects();
+  renderDashboard(); renderForecast(); renderTransactions(); renderCards(); renderGoals(); renderSubscriptions(); updateSelects();
 }
 
 function renderDashboard() {
@@ -108,13 +117,34 @@ function renderDashboard() {
   const month = state.transactions.filter((item) => item.occurred_on.startsWith(prefix));
   const income = month.filter((item) => item.kind === "income").reduce((sum, item) => sum + Number(item.amount), 0);
   const expenses = month.filter((item) => item.kind === "expense").reduce((sum, item) => sum + Number(item.amount), 0);
-  $("#balance").textContent = money.format(income - expenses); $("#income").textContent = `↑ ${money.format(income)}`; $("#expenses").textContent = `↓ ${money.format(expenses)}`;
+  $("#balance").textContent = money.format(income - expenses); $("#income").textContent = money.format(income); $("#expenses").textContent = money.format(expenses);
   renderTransactionList($("#recent-list"), state.transactions.slice(0, 5), false);
+}
+
+function renderForecast() {
+  const target = valueOf("#forecast-date") || isoDate();
+  const throughDate = state.transactions.filter((item) => item.occurred_on <= target);
+  const onDate = state.transactions.filter((item) => item.occurred_on === target);
+  const balance = throughDate.reduce((sum, item) => sum + signedAmount(item), 0);
+  const dayIncome = onDate.filter((item) => item.kind === "income").reduce((sum, item) => sum + Number(item.amount), 0);
+  const dayExpenses = onDate.filter((item) => item.kind === "expense").reduce((sum, item) => sum + Number(item.amount), 0);
+  const balanceElement = $("#forecast-balance");
+  balanceElement.textContent = money.format(balance); balanceElement.classList.toggle("negative", balance < 0);
+  $("#forecast-day-income").textContent = money.format(dayIncome); $("#forecast-day-expense").textContent = money.format(dayExpenses);
+  const futureCount = throughDate.filter((item) => item.occurred_on > isoDate()).length;
+  $("#forecast-caption").textContent = target >= isoDate() ? `${futureCount} lançamento${futureCount === 1 ? " futuro" : "s futuros"} considerado${futureCount === 1 ? "" : "s"} até ${formatDate(target)}.` : `Resultado acumulado até ${formatDate(target)}.`;
+  const result = $(".forecast-result"); result.classList.remove("pulse"); requestAnimationFrame(() => result.classList.add("pulse"));
 }
 
 function renderTransactions() {
   const query = valueOf("#transaction-search").toLocaleLowerCase("pt-BR");
-  const items = query ? state.transactions.filter((item) => item.description.toLocaleLowerCase("pt-BR").includes(query)) : state.transactions;
+  const start = valueOf("#filter-date-start"); const end = valueOf("#filter-date-end");
+  const validRange = !start || !end || start <= end;
+  const items = validRange ? state.transactions.filter((item) => (!query || item.description.toLocaleLowerCase("pt-BR").includes(query)) && (!start || item.occurred_on >= start) && (!end || item.occurred_on <= end)) : [];
+  const income = items.filter((item) => item.kind === "income").reduce((sum, item) => sum + Number(item.amount), 0);
+  const expenses = items.filter((item) => item.kind === "expense").reduce((sum, item) => sum + Number(item.amount), 0);
+  $("#period-count").textContent = validRange ? `${items.length} LANÇAMENTO${items.length === 1 ? "" : "S"}` : "AJUSTE AS DATAS";
+  $("#period-balance").textContent = money.format(income - expenses); $("#period-income").textContent = money.format(income); $("#period-expenses").textContent = money.format(expenses);
   renderTransactionList($("#transaction-list"), items, true);
 }
 
@@ -122,7 +152,7 @@ function renderTransactionList(target, items, allowDelete) {
   const categoryNames = Object.fromEntries(state.categories.map((item) => [item.id, item.name]));
   target.innerHTML = items.length ? items.map((item) => {
     const suffix = item.installments_total ? ` · ${item.installment_number}/${item.installments_total}` : "";
-    return `<article class="transaction ${item.kind}"><span class="transaction-icon">${item.kind === "income" ? "↑" : "↓"}</span><span><strong>${escapeHtml(item.description)}</strong><small>${formatDate(item.occurred_on)} · ${escapeHtml(categoryNames[item.category_id] || "Sem categoria")}${suffix}</small></span><span><strong class="amount">${item.kind === "income" ? "+" : "−"}${money.format(Number(item.amount))}</strong>${allowDelete ? `<button class="delete" type="button" data-delete-transaction="${item.id}">Excluir</button>` : ""}</span></article>`;
+    return `<article class="transaction ${item.kind}"><span class="transaction-icon">${icon(item.kind)}</span><span><strong>${escapeHtml(item.description)}</strong><small>${formatDate(item.occurred_on)} · ${escapeHtml(categoryNames[item.category_id] || "Sem categoria")}${suffix}</small></span><span><strong class="amount">${item.kind === "income" ? "+" : "−"}${money.format(Number(item.amount))}</strong>${allowDelete ? `<button class="delete" type="button" data-delete-transaction="${item.id}">Excluir</button>` : ""}</span></article>`;
   }).join("") : '<p class="empty"><strong>Nenhum lançamento</strong>Use o botão + para começar.</p>';
 }
 
@@ -158,8 +188,21 @@ function addMonths(dateString, months) { const [year, month, day] = dateString.s
 
 function selectTab(tab) {
   $$(".view").forEach((view) => view.classList.toggle("active", view.dataset.view === tab));
-  $$(".tab-bar [data-tab]").forEach((button) => button.classList.toggle("active", button.dataset.tab === tab));
+  $$(".tab-bar [data-tab]").forEach((button) => { const active = button.dataset.tab === tab; button.classList.toggle("active", active); if (active) button.setAttribute("aria-current", "page"); else button.removeAttribute("aria-current"); });
   $("#page-title").textContent = titles[tab]; window.scrollTo({top: 0, behavior: "smooth"});
+}
+
+function setDatePreset(preset) {
+  const start = $("#filter-date-start"); const end = $("#filter-date-end"); const today = isoDate();
+  if (preset === "today") { start.value = today; end.value = today; }
+  if (preset === "7") { start.value = today; end.value = offsetDate(6); }
+  if (preset === "month") { start.value = monthBoundary("start"); end.value = monthBoundary("end"); }
+  if (preset === "all") { start.value = ""; end.value = ""; }
+  state.datePreset = preset; $$("[data-date-preset]").forEach((button) => button.classList.toggle("active", button.dataset.datePreset === preset)); renderTransactions();
+}
+
+function setForecastPreset(preset) {
+  $("#forecast-date").value = preset === "month" ? monthBoundary("end") : offsetDate(Number(preset)); renderForecast();
 }
 
 function openTransaction(kind) {
@@ -249,7 +292,13 @@ function registerEvents() {
   $$("[data-kind]").forEach((button) => button.addEventListener("click", () => { state.kind = button.dataset.kind; $$("[data-kind]").forEach((item) => item.classList.toggle("active", item === button)); updateSelects(); }));
   $("#transaction-form").addEventListener("submit", saveTransaction); $("#card-form").addEventListener("submit", saveCard); $("#goal-form").addEventListener("submit", saveGoal); $("#subscription-form").addEventListener("submit", saveSubscription);
   $("#transaction-search").addEventListener("input", renderTransactions);
+  $("#forecast-date").addEventListener("change", renderForecast);
+  $$("[data-forecast-preset]").forEach((button) => button.addEventListener("click", () => setForecastPreset(button.dataset.forecastPreset)));
+  $$("[data-date-preset]").forEach((button) => button.addEventListener("click", () => setDatePreset(button.dataset.datePreset)));
+  [$("#filter-date-start"), $("#filter-date-end")].forEach((input) => input.addEventListener("change", () => { state.datePreset = "custom"; $$("[data-date-preset]").forEach((button) => button.classList.remove("active")); $("#filter-date-start").max = valueOf("#filter-date-end") || "9999-12-31"; $("#filter-date-end").min = valueOf("#filter-date-start"); renderTransactions(); }));
   document.addEventListener("click", (event) => { const transaction = event.target.closest("[data-delete-transaction]"); if (transaction) deleteTransaction(transaction.dataset.deleteTransaction); const record = event.target.closest("[data-delete-record]"); if (record) { const [table, id] = record.dataset.deleteRecord.split(":"); deleteRecord(table, id); } const goal = event.target.closest("[data-update-goal]"); if (goal) updateGoal(goal.dataset.updateGoal); });
+  document.addEventListener("click", (event) => { if (!event.target.closest("#account-button") && !event.target.closest("#account-menu")) $("#account-menu").hidden = true; });
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") $("#account-menu").hidden = true; });
   window.addEventListener("offline", updateNetwork); window.addEventListener("online", () => { updateNetwork(); if (state.user) loadData(); }); updateNetwork();
 }
 
@@ -260,6 +309,7 @@ window.addEventListener("beforeinstallprompt", (event) => { event.preventDefault
 $("#install-app").addEventListener("click", async () => { if (!installPrompt) return; await installPrompt.prompt(); installPrompt = null; $("#install-app").hidden = true; });
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js"));
 
+$("#forecast-date").value = monthBoundary("end");
 registerEvents();
 supabase.auth.onAuthStateChange((event, session) => {
   queueMicrotask(() => {

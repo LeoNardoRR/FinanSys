@@ -115,7 +115,7 @@ O aplicativo Expo está documentado em [`mobile/README.md`](mobile/README.md). O
 
 ## Aplicativo gratuito no GitHub Pages
 
-A pasta [`pages-preview/`](pages-preview/) contém o aplicativo web instalável. Depois de criar e confirmar uma conta, receitas, despesas, parcelamentos, cartões, metas e assinaturas são salvos no PostgreSQL do Supabase e sincronizados entre celular e computador.
+A pasta [`pages-preview/`](pages-preview/) contém o aplicativo web instalável. Depois de criar e confirmar uma conta, receitas, despesas, parcelamentos, cartões, metas e assinaturas são salvos no PostgreSQL do Supabase e sincronizados entre celular e computador. A tela inicial também projeta o saldo acumulado para qualquer data escolhida, enquanto a área de movimentações permite buscar por texto, dia ou intervalo e resume entradas, saídas e resultado do período.
 
 O GitHub Pages continua sendo apenas o host dos arquivos do frontend — ele não executa FastAPI, Python ou SQLite. A persistência da versão online é feita pelo Supabase. A chave presente no JavaScript é uma chave pública de cliente; o isolamento real é aplicado no banco por Row Level Security (RLS), de forma que cada conta acessa somente os próprios registros. Nunca adicione uma chave `service_role` ao frontend.
 
