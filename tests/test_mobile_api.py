@@ -64,3 +64,23 @@ def test_pages_app_uses_supabase_and_is_built_separately():
     assert "🔒" not in html
     assert "npm run build" in workflow
     assert "path: pages-preview" in workflow
+
+
+def test_pages_auth_has_resilient_feedback_and_accessible_controls():
+    root = Path(__file__).resolve().parent.parent / "pages-preview"
+    html = (root / "index.html").read_text(encoding="utf-8")
+    source = (root / "src" / "app.js").read_text(encoding="utf-8")
+    worker = (root / "service-worker.js").read_text(encoding="utf-8")
+
+    assert 'role="status"' in html
+    assert 'aria-live="polite"' in html
+    assert html.count("data-password-toggle=") == 4
+    assert "runAuth" in source
+    assert "withTimeout" in source
+    assert "finally" in source
+    assert 'error?.code === "invalid_credentials"' in source
+    assert 'error?.code === "email_not_confirmed"' in source
+    assert "form.toggleAttribute(\"aria-busy\", busy)" in source
+    assert "finansys-app-v9" in worker
+    assert "styles.css?v=9" in html
+    assert "app.js?v=9" in html

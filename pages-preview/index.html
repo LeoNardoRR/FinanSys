@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#1d4ed8">
-  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#0b0d10">
+  <meta name="color-scheme" content="dark">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://jrbemrqahgnabqrrvhqb.supabase.co wss://jrbemrqahgnabqrrvhqb.supabase.co; base-uri 'none'; form-action 'self'">
   <title>FinanSys · Finanças pessoais</title>
   <meta name="description" content="Aplicativo seguro para organizar suas finanças pessoais.">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="app-icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=5">
+  <link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body>
   <svg class="icon-sprite" aria-hidden="true">
@@ -27,6 +27,9 @@
     <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/></symbol>
     <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+    <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="m3 3 18 18M10.6 6.1A10.5 10.5 0 0 1 12 6c6 0 9.5 6 9.5 6a16 16 0 0 1-2.3 3M6.4 6.4C3.8 8.2 2.5 12 2.5 12s3.5 6 9.5 6c1.5 0 2.8-.4 4-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
   </svg>
   <div class="network-banner" id="network-banner" hidden>Você está sem conexão. Seus dados serão carregados quando a internet voltar.</div>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -34,30 +37,30 @@
   <section class="auth-screen" id="auth-screen">
     <div class="auth-brand"><img src="app-icon.svg" width="54" height="54" alt=""><div><strong>FinanSys</strong><span>Seu dinheiro, sob controle.</span></div></div>
     <article class="auth-card">
-      <div class="auth-heading"><small>ACESSO SEGURO</small><h1>Entre na sua conta</h1><p>Seus dados ficam sincronizados e protegidos por usuário.</p></div>
-      <div class="auth-tabs" role="tablist"><button type="button" class="active" data-auth-tab="login">Entrar</button><button type="button" data-auth-tab="signup">Criar conta</button></div>
-      <form id="login-form" class="auth-form">
+      <div class="auth-heading"><small>ACESSO SEGURO</small><h1 id="auth-title">Entre na sua conta</h1><p id="auth-description">Seus dados ficam sincronizados e protegidos por usuário.</p></div>
+      <div class="auth-tabs" id="auth-tabs" role="tablist"><button type="button" class="active" data-auth-tab="login">Entrar</button><button type="button" data-auth-tab="signup">Criar conta</button></div>
+      <form id="login-form" class="auth-form" novalidate>
         <label>E-mail<input id="login-email" type="email" autocomplete="email" required placeholder="voce@exemplo.com"></label>
-        <label>Senha<input id="login-password" type="password" autocomplete="current-password" required minlength="8" placeholder="Sua senha"></label>
-        <button class="primary" type="submit">Entrar</button>
+        <label>Senha<span class="password-field"><input id="login-password" type="password" autocomplete="current-password" required minlength="8" placeholder="Sua senha"><button type="button" data-password-toggle="login-password" aria-label="Mostrar senha"><svg class="icon"><use href="#i-eye"/></svg></button></span></label>
+        <button class="primary auth-submit" type="submit"><span>Entrar</span><svg class="icon"><use href="#i-arrow-right"/></svg></button>
         <button class="text-button" type="button" id="forgot-password">Esqueci minha senha</button>
       </form>
-      <form id="signup-form" class="auth-form" hidden>
+      <form id="signup-form" class="auth-form" hidden novalidate>
         <label>E-mail<input id="signup-email" type="email" autocomplete="email" required placeholder="voce@exemplo.com"></label>
-        <label>Crie uma senha<input id="signup-password" type="password" autocomplete="new-password" required minlength="8" placeholder="Pelo menos 8 caracteres"></label>
-        <label>Repita a senha<input id="signup-password-confirm" type="password" autocomplete="new-password" required minlength="8" placeholder="Repita sua senha"></label>
-        <button class="primary" type="submit">Criar conta gratuita</button>
+        <label>Crie uma senha<span class="password-field"><input id="signup-password" type="password" autocomplete="new-password" required minlength="8" placeholder="Pelo menos 8 caracteres"><button type="button" data-password-toggle="signup-password" aria-label="Mostrar senha"><svg class="icon"><use href="#i-eye"/></svg></button></span></label>
+        <label>Repita a senha<span class="password-field"><input id="signup-password-confirm" type="password" autocomplete="new-password" required minlength="8" placeholder="Repita sua senha"><button type="button" data-password-toggle="signup-password-confirm" aria-label="Mostrar senha"><svg class="icon"><use href="#i-eye"/></svg></button></span></label>
+        <button class="primary auth-submit" type="submit"><span>Criar conta gratuita</span><svg class="icon"><use href="#i-arrow-right"/></svg></button>
       </form>
-      <form id="recovery-form" class="auth-form" hidden>
+      <form id="recovery-form" class="auth-form" hidden novalidate>
         <label>Seu e-mail<input id="recovery-email" type="email" autocomplete="email" required placeholder="voce@exemplo.com"></label>
-        <button class="primary" type="submit">Enviar link de recuperação</button>
+        <button class="primary auth-submit" type="submit"><span>Enviar link de recuperação</span><svg class="icon"><use href="#i-arrow-right"/></svg></button>
         <button class="text-button" type="button" data-auth-tab="login">Voltar para o login</button>
       </form>
-      <form id="new-password-form" class="auth-form" hidden>
-        <label>Nova senha<input id="new-password" type="password" autocomplete="new-password" required minlength="8" placeholder="Pelo menos 8 caracteres"></label>
-        <button class="primary" type="submit">Atualizar senha</button>
+      <form id="new-password-form" class="auth-form" hidden novalidate>
+        <label>Nova senha<span class="password-field"><input id="new-password" type="password" autocomplete="new-password" required minlength="8" placeholder="Pelo menos 8 caracteres"><button type="button" data-password-toggle="new-password" aria-label="Mostrar senha"><svg class="icon"><use href="#i-eye"/></svg></button></span></label>
+        <button class="primary auth-submit" type="submit"><span>Atualizar senha</span><svg class="icon"><use href="#i-arrow-right"/></svg></button>
       </form>
-      <p class="auth-message" id="auth-message" aria-live="polite"></p>
+      <p class="auth-message" id="auth-message" role="status" aria-live="polite" aria-atomic="true"></p>
       <p class="security-note"><svg class="icon"><use href="#i-shield"/></svg>Conexão criptografada. Cada usuário acessa somente os próprios registros.</p>
     </article>
   </section>
@@ -66,7 +69,7 @@
 
   <main class="app-shell" id="app-shell" hidden>
     <header class="app-header">
-      <div><small>FINANSYS</small><h1 id="page-title">Visão geral</h1></div>
+      <div class="app-heading"><small>FINANSYS</small><span id="welcome-copy">Bem-vindo de volta</span><h1 id="page-title">Visão geral</h1></div>
       <div class="header-actions"><button id="install-app" class="install-button" type="button" hidden>Instalar</button><button class="avatar" id="account-button" type="button" aria-label="Abrir opções da conta">F</button></div>
       <div class="account-menu" id="account-menu" hidden><strong id="account-email"></strong><button id="logout-button" type="button">Sair da conta</button></div>
     </header>
@@ -119,6 +122,6 @@
 
   <dialog id="subscription-dialog"><form id="subscription-form"><div class="dialog-head"><div><small>NOVA ASSINATURA</small><h2>Adicionar recorrência</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><label>Nome<input id="subscription-name" required maxlength="100" placeholder="Ex.: Streaming"></label><div class="form-row"><label>Valor mensal<input id="subscription-amount" required inputmode="decimal" placeholder="0,00"></label><label>Dia da cobrança<input id="subscription-day" required type="number" min="1" max="31"></label></div><label>Cartão<select id="subscription-card"></select></label><p class="form-error" id="subscription-error"></p><button class="primary" type="submit">Salvar assinatura</button></form></dialog>
 
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>

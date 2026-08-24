@@ -1,5 +1,5 @@
-const CACHE = "finansys-app-v5";
-const ASSETS = ["./", "index.html", "styles.css?v=5", "app.js?v=5", "manifest.webmanifest", "app-icon.svg"];
+const CACHE = "finansys-app-v9";
+const ASSETS = ["./", "index.html", "styles.css?v=9", "app.js?v=9", "manifest.webmanifest", "app-icon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));

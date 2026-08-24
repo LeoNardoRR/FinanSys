@@ -8,8 +8,16 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
 });
 
 const state = {user: null, transactions: [], categories: [], cards: [], goals: [], subscriptions: [], kind: "expense", datePreset: "all"};
+const AUTH_TIMEOUT_MS = 15000;
+let authAttempt = 0;
 const money = new Intl.NumberFormat("pt-BR", {style: "currency", currency: "BRL"});
 const titles = {home: "Visão geral", transactions: "Movimentações", cards: "Cartões", planning: "Planejamento"};
+const authCopy = {
+  login: ["Entre na sua conta", "Acesse seu panorama financeiro com segurança."],
+  signup: ["Crie sua conta", "Comece gratuitamente e sincronize seus dados entre dispositivos."],
+  recovery: ["Recupere seu acesso", "Enviaremos um link seguro para o e-mail cadastrado."],
+  "new-password": ["Defina uma nova senha", "Use pelo menos 8 caracteres para proteger sua conta."],
+};
 const defaults = [
   ["Salário", "income", "#16a34a"], ["Investimentos", "income", "#0d9488"],
   ["Moradia", "expense", "#2563eb"], ["Alimentação", "expense", "#dc2626"],
@@ -41,17 +49,18 @@ function parseMoney(value) {
 
 function friendlyError(error) {
   const message = error?.message || String(error || "Erro inesperado.");
-  if (/invalid login credentials/i.test(message)) return "E-mail ou senha incorretos.";
-  if (/email not confirmed/i.test(message)) return "Confirme seu e-mail antes de entrar.";
-  if (/user already registered/i.test(message)) return "Este e-mail já possui uma conta.";
+  if (error?.code === "invalid_credentials" || /invalid login credentials/i.test(message)) return "E-mail ou senha incorretos. Confira os dados ou recupere sua senha.";
+  if (error?.code === "email_not_confirmed" || /email not confirmed/i.test(message)) return "Seu e-mail ainda não foi confirmado. Abra o link enviado no cadastro.";
+  if (error?.code === "user_already_exists" || /user already registered/i.test(message)) return "Este e-mail já possui uma conta. Entre ou recupere sua senha.";
   if (/password/i.test(message) && /least/i.test(message)) return "A senha precisa ter pelo menos 8 caracteres.";
   if (/only request this after/i.test(message)) {
     const seconds = message.match(/after (\d+) seconds?/i)?.[1] || "alguns";
     return `O e-mail já foi solicitado. Aguarde ${seconds} segundos antes de tentar novamente.`;
   }
   if (/rate limit|too many/i.test(message)) return "Muitas tentativas. Aguarde alguns minutos.";
+  if (error?.code === "auth_timeout" || /tempo limite/i.test(message)) return "A conexão demorou demais. Confira sua internet e tente novamente.";
   if (/failed to fetch|network/i.test(message)) return "Sem conexão com o servidor. Verifique sua internet.";
-  return message;
+  return "Não foi possível concluir agora. Tente novamente em instantes.";
 }
 
 function toast(message) {
@@ -59,18 +68,60 @@ function toast(message) {
   clearTimeout(toast.timer); toast.timer = setTimeout(() => { element.hidden = true; }, 3500);
 }
 
-function setAuthMessage(message = "", success = false) {
-  const element = $("#auth-message"); element.textContent = message; element.classList.toggle("success", success);
+function setAuthMessage(message = "", success = false, pending = false) {
+  const element = $("#auth-message"); element.textContent = message; element.classList.toggle("success", success); element.classList.toggle("pending", pending); element.classList.toggle("visible", Boolean(message));
+  if (message) element.scrollIntoView({block: "nearest", behavior: "smooth"});
 }
 
 function setBusy(form, busy) {
   form.querySelectorAll("button,input,select,textarea").forEach((control) => { control.disabled = busy; });
+  form.toggleAttribute("aria-busy", busy);
+}
+
+function validateAuthForm(form) {
+  const empty = [...form.querySelectorAll("[required]")].find((input) => !input.value.trim());
+  if (empty) { setAuthMessage("Preencha todos os campos para continuar."); empty.focus(); return false; }
+  const invalidEmail = [...form.querySelectorAll('input[type="email"]')].find((input) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim()));
+  if (invalidEmail) { setAuthMessage("Informe um e-mail válido."); invalidEmail.focus(); return false; }
+  const shortPassword = [...form.querySelectorAll('input[autocomplete="current-password"],input[autocomplete="new-password"]')].find((input) => input.value.length < 8);
+  if (shortPassword) { setAuthMessage("A senha precisa ter pelo menos 8 caracteres."); shortPassword.focus(); return false; }
+  const invalid = [...form.elements].find((control) => control.willValidate && !control.checkValidity());
+  if (!invalid) return true;
+  const message = invalid.validity.valueMissing ? "Preencha todos os campos para continuar." : invalid.validity.typeMismatch ? "Informe um e-mail válido." : invalid.validity.tooShort ? "A senha precisa ter pelo menos 8 caracteres." : "Revise os dados informados.";
+  setAuthMessage(message); invalid.focus(); return false;
+}
+
+function withTimeout(promise) {
+  let timer;
+  const timeout = new Promise((_, reject) => { timer = setTimeout(() => reject(Object.assign(new Error("Tempo limite de autenticação."), {code: "auth_timeout"})), AUTH_TIMEOUT_MS); });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+async function runAuth(form, busyLabel, action) {
+  if (!validateAuthForm(form)) return null;
+  const attempt = ++authAttempt;
+  const submit = form.querySelector("button[type='submit']"); const label = submit.querySelector("span"); const original = label.textContent;
+  document.activeElement?.blur(); setBusy(form, true); submit.classList.add("loading"); label.textContent = busyLabel; setAuthMessage("Conectando com segurança…", false, true);
+  try {
+    const result = await withTimeout(action());
+    if (result.error) throw result.error;
+    if (attempt !== authAttempt) return null;
+    return result.data;
+  } catch (error) {
+    if (attempt !== authAttempt) return null;
+    console.error("Falha de autenticação", {code: error?.code, status: error?.status});
+    setAuthMessage(friendlyError(error)); return null;
+  } finally {
+    setBusy(form, false); submit.classList.remove("loading"); label.textContent = original;
+  }
 }
 
 function showAuth(mode = "login") {
+  authAttempt += 1;
   $("#auth-screen").hidden = false; $("#app-shell").hidden = true; $("#tab-bar").hidden = true; $("#loading-screen").hidden = true;
   $$(".auth-form").forEach((form) => { form.hidden = form.id !== `${mode}-form`; });
   $$("[data-auth-tab]").forEach((button) => button.classList.toggle("active", button.dataset.authTab === mode));
+  $("#auth-tabs").hidden = !["login", "signup"].includes(mode); [$("#auth-title").textContent, $("#auth-description").textContent] = authCopy[mode] || authCopy.login;
   setAuthMessage();
 }
 
@@ -78,6 +129,7 @@ async function showApp(user) {
   state.user = user; $("#auth-screen").hidden = true; $("#loading-screen").hidden = false;
   $("#account-email").textContent = user.email || "Conta FinanSys";
   $("#account-button").textContent = (user.email || "F").charAt(0).toUpperCase();
+  $("#welcome-copy").textContent = `Olá, ${(user.email || "você").split("@")[0]}`;
   try {
     await seedCategories();
     await loadData();
@@ -266,23 +318,34 @@ async function deleteRecord(table, id) {
 
 function registerEvents() {
   $$("[data-auth-tab]").forEach((button) => button.addEventListener("click", () => showAuth(button.dataset.authTab)));
-  $("#forgot-password").addEventListener("click", () => showAuth("recovery"));
-  $("#login-form").addEventListener("submit", async (event) => { event.preventDefault(); setBusy(event.currentTarget, true); setAuthMessage(); const {error} = await supabase.auth.signInWithPassword({email: valueOf("#login-email"), password: valueOf("#login-password")}); setBusy(event.currentTarget, false); if (error) setAuthMessage(friendlyError(error)); });
+  $("#forgot-password").addEventListener("click", () => { $("#recovery-email").value = valueOf("#login-email"); showAuth("recovery"); });
+  $$("[data-password-toggle]").forEach((button) => button.addEventListener("click", () => {
+    const input = $(`#${button.dataset.passwordToggle}`); const visible = input.type === "text"; input.type = visible ? "password" : "text";
+    button.setAttribute("aria-label", visible ? "Mostrar senha" : "Ocultar senha"); button.querySelector("use").setAttribute("href", visible ? "#i-eye" : "#i-eye-off"); input.focus();
+  }));
+  $("#login-form").addEventListener("submit", async (event) => {
+    event.preventDefault(); const data = await runAuth(event.currentTarget, "Entrando…", () => supabase.auth.signInWithPassword({email: valueOf("#login-email"), password: valueOf("#login-password")}));
+    if (data?.session) setAuthMessage("Login confirmado. Carregando seus dados…", true, true);
+  });
   $("#signup-form").addEventListener("submit", async (event) => {
-    event.preventDefault();
+    event.preventDefault(); if (!validateAuthForm(event.currentTarget)) return;
     const password = valueOf("#signup-password");
     if (password !== valueOf("#signup-password-confirm")) return setAuthMessage("As senhas não coincidem.");
-    setBusy(event.currentTarget, true); setAuthMessage();
-    const {data, error} = await supabase.auth.signUp({email: valueOf("#signup-email"), password, options: {emailRedirectTo: APP_URL}});
-    setBusy(event.currentTarget, false);
-    if (error) { const message = friendlyError(error); setAuthMessage(message); toast(message); return; }
+    const data = await runAuth(event.currentTarget, "Criando conta…", () => supabase.auth.signUp({email: valueOf("#signup-email"), password, options: {emailRedirectTo: APP_URL}}));
+    if (!data) return;
     if (!data.session) {
       const message = "Cadastro recebido. Abra o e-mail de confirmação para liberar sua conta.";
       setAuthMessage(message, true); toast(message);
     }
   });
-  $("#recovery-form").addEventListener("submit", async (event) => { event.preventDefault(); setBusy(event.currentTarget, true); const {error} = await supabase.auth.resetPasswordForEmail(valueOf("#recovery-email"), {redirectTo: APP_URL}); setBusy(event.currentTarget, false); setAuthMessage(error ? friendlyError(error) : "Enviamos o link de recuperação para seu e-mail.", !error); });
-  $("#new-password-form").addEventListener("submit", async (event) => { event.preventDefault(); setBusy(event.currentTarget, true); const {error} = await supabase.auth.updateUser({password: valueOf("#new-password")}); setBusy(event.currentTarget, false); if (error) return setAuthMessage(friendlyError(error)); toast("Senha atualizada."); });
+  $("#recovery-form").addEventListener("submit", async (event) => {
+    event.preventDefault(); const data = await runAuth(event.currentTarget, "Enviando…", () => supabase.auth.resetPasswordForEmail(valueOf("#recovery-email"), {redirectTo: APP_URL}));
+    if (data !== null) setAuthMessage("Se o e-mail estiver cadastrado, você receberá um link de recuperação.", true);
+  });
+  $("#new-password-form").addEventListener("submit", async (event) => {
+    event.preventDefault(); const data = await runAuth(event.currentTarget, "Atualizando…", () => supabase.auth.updateUser({password: valueOf("#new-password")}));
+    if (data) { setAuthMessage("Senha atualizada. Você já pode continuar.", true); toast("Senha atualizada."); }
+  });
   $("#logout-button").addEventListener("click", async () => { await supabase.auth.signOut(); });
   $("#account-button").addEventListener("click", () => { $("#account-menu").hidden = !$("#account-menu").hidden; });
   $$("[data-tab]").forEach((button) => button.addEventListener("click", () => selectTab(button.dataset.tab)));
