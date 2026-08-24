@@ -81,7 +81,27 @@ def test_pages_auth_has_resilient_feedback_and_accessible_controls():
     assert 'error?.code === "invalid_credentials"' in source
     assert 'error?.code === "email_not_confirmed"' in source
     assert "form.toggleAttribute(\"aria-busy\", busy)" in source
-    assert "finansys-app-v10" in worker
-    assert "styles.css?v=10" in html
-    assert "app.js?v=10" in html
-    assert "app-icon.svg?v=10" in html
+    assert "finansys-app-v11" in worker
+    assert "styles.css?v=11" in html
+    assert "app.js?v=11" in html
+    assert "app-icon.svg?v=11" in html
+
+
+def test_pages_transactions_support_editing_and_private_receipts():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pages-preview" / "index.html").read_text(encoding="utf-8")
+    source = (root / "pages-preview" / "src" / "app.js").read_text(encoding="utf-8")
+    styles = (root / "pages-preview" / "styles.css").read_text(encoding="utf-8")
+    migration = (root / "supabase" / "migrations" / "20260824091500_add_transaction_receipts.sql").read_text(encoding="utf-8")
+
+    assert 'id="transaction-receipt"' in html
+    assert 'id="receipt-dialog"' in html
+    assert "data-edit-transaction" in source
+    assert 'from("transactions").update' in source
+    assert "createSignedUrl" in source
+    assert "MAX_RECEIPT_SIZE" in source
+    assert "@media(max-width:440px)" in styles
+    assert ".form-row,.date-range{grid-template-columns:minmax(0,1fr)}" in styles
+    assert "public = excluded.public" in migration
+    assert "transaction_receipts_select_own" in migration
+    assert "(storage.foldername(name))[1] = (select auth.uid())::text" in migration

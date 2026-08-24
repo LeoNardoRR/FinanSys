@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b0d10">
   <meta name="color-scheme" content="dark">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://jrbemrqahgnabqrrvhqb.supabase.co wss://jrbemrqahgnabqrrvhqb.supabase.co; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://jrbemrqahgnabqrrvhqb.supabase.co; connect-src 'self' https://jrbemrqahgnabqrrvhqb.supabase.co wss://jrbemrqahgnabqrrvhqb.supabase.co; base-uri 'none'; form-action 'self'">
   <title>FinanSys · Finanças pessoais</title>
   <meta name="description" content="Aplicativo seguro para organizar suas finanças pessoais.">
-  <link rel="manifest" href="manifest.webmanifest?v=10">
-  <link rel="icon" href="app-icon.svg?v=10" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="manifest" href="manifest.webmanifest?v=11">
+  <link rel="icon" href="app-icon.svg?v=11" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
   <svg class="icon-sprite" aria-hidden="true">
@@ -30,12 +30,14 @@
     <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></symbol>
     <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="m3 3 18 18M10.6 6.1A10.5 10.5 0 0 1 12 6c6 0 9.5 6 9.5 6a16 16 0 0 1-2.3 3M6.4 6.4C3.8 8.2 2.5 12 2.5 12s3.5 6 9.5 6c1.5 0 2.8-.4 4-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
     <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4l11-11-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 7h4l2-2h4l2 2h4v12H4V7Z"/><circle cx="12" cy="13" r="3"/></symbol>
   </svg>
   <div class="network-banner" id="network-banner" hidden>Você está sem conexão. Seus dados serão carregados quando a internet voltar.</div>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
   <section class="auth-screen" id="auth-screen">
-    <div class="auth-brand"><img src="app-icon.svg?v=10" width="54" height="54" alt=""><div><strong>FinanSys</strong><span>Seu dinheiro, sob controle.</span></div></div>
+    <div class="auth-brand"><img src="app-icon.svg?v=11" width="54" height="54" alt=""><div><strong>FinanSys</strong><span>Seu dinheiro, sob controle.</span></div></div>
     <article class="auth-card">
       <div class="auth-heading"><small>ACESSO SEGURO</small><h1 id="auth-title">Entre na sua conta</h1><p id="auth-description">Seus dados ficam sincronizados e protegidos por usuário.</p></div>
       <div class="auth-tabs" id="auth-tabs" role="tablist"><button type="button" class="active" data-auth-tab="login">Entrar</button><button type="button" data-auth-tab="signup">Criar conta</button></div>
@@ -114,7 +116,9 @@
 
   <nav class="tab-bar" id="tab-bar" aria-label="Navegação principal" hidden><button class="active" type="button" data-tab="home" aria-current="page"><b><svg class="icon"><use href="#i-home"/></svg></b><span>Início</span></button><button type="button" data-tab="transactions"><b><svg class="icon"><use href="#i-movements"/></svg></b><span>Movimentos</span></button><button class="add" type="button" data-action="expense" aria-label="Novo lançamento"><b><svg class="icon"><use href="#i-plus"/></svg></b></button><button type="button" data-tab="cards"><b><svg class="icon"><use href="#i-card"/></svg></b><span>Cartões</span></button><button type="button" data-tab="planning"><b><svg class="icon"><use href="#i-target"/></svg></b><span>Planejar</span></button></nav>
 
-  <dialog id="transaction-dialog"><form id="transaction-form"><div class="dialog-head"><div><small>NOVO LANÇAMENTO</small><h2>Adicionar movimento</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><div class="segmented"><button type="button" data-kind="expense" class="active">Despesa</button><button type="button" data-kind="income">Receita</button></div><label>Descrição<input id="transaction-description" required maxlength="160" placeholder="Ex.: Supermercado"></label><div class="form-row"><label>Valor total<input id="transaction-amount" required inputmode="decimal" placeholder="0,00"></label><label>Data<input id="transaction-date" required type="date"></label></div><div class="form-row"><label>Categoria<select id="transaction-category"></select></label><label>Cartão<select id="transaction-card"></select></label></div><label>Parcelas<input id="transaction-installments" type="number" min="1" max="120" value="1"></label><label>Observações<textarea id="transaction-notes" maxlength="2000" placeholder="Opcional"></textarea></label><p class="form-error" id="transaction-error"></p><button class="primary" type="submit">Salvar lançamento</button></form></dialog>
+  <dialog id="transaction-dialog"><form id="transaction-form"><div class="dialog-head"><div><small id="transaction-dialog-eyebrow">NOVO LANÇAMENTO</small><h2 id="transaction-dialog-title">Adicionar movimento</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><div class="segmented"><button type="button" data-kind="expense" class="active">Despesa</button><button type="button" data-kind="income">Receita</button></div><label>Descrição<input id="transaction-description" required maxlength="160" placeholder="Ex.: Supermercado"></label><div class="form-row"><label>Valor total<input id="transaction-amount" required inputmode="decimal" placeholder="0,00"></label><label>Data<input id="transaction-date" required type="date"></label></div><div class="form-row"><label>Categoria<select id="transaction-category"></select></label><label>Cartão<select id="transaction-card"></select></label></div><label id="installments-field">Parcelas<input id="transaction-installments" type="number" min="1" max="120" value="1"><small id="installments-help">O total será dividido entre os meses.</small></label><label>Observações<textarea id="transaction-notes" maxlength="2000" placeholder="Opcional"></textarea></label><div class="receipt-field"><span>Comprovante ou foto</span><label class="file-picker" for="transaction-receipt"><svg class="icon"><use href="#i-camera"/></svg><span id="receipt-label">Escolher da câmera ou galeria</span><input id="transaction-receipt" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif"></label><small>Imagem privada, até 5 MB. JPG, PNG, WebP ou HEIC.</small><label class="remove-receipt" id="remove-receipt-field" hidden><input id="remove-receipt" type="checkbox"> Remover foto atual</label></div><p class="form-error" id="transaction-error"></p><button class="primary" id="transaction-submit" type="submit">Salvar lançamento</button></form></dialog>
+
+  <dialog id="receipt-dialog" class="receipt-dialog"><div class="receipt-viewer"><div class="dialog-head"><div><small>COMPROVANTE PRIVADO</small><h2>Foto do lançamento</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><div class="receipt-loading" id="receipt-loading">Carregando imagem…</div><img id="receipt-image" alt="Comprovante do lançamento" hidden></div></dialog>
 
   <dialog id="card-dialog"><form id="card-form"><div class="dialog-head"><div><small>NOVO CARTÃO</small><h2>Adicionar cartão</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><label>Nome<input id="card-name" required maxlength="80" placeholder="Ex.: Nubank"></label><label>Bandeira<input id="card-brand" maxlength="40" placeholder="Ex.: Mastercard"></label><label>Limite<input id="card-limit" required inputmode="decimal" placeholder="0,00"></label><div class="form-row"><label>Fechamento<input id="card-closing" type="number" min="1" max="31"></label><label>Vencimento<input id="card-due" type="number" min="1" max="31"></label></div><p class="form-error" id="card-error"></p><button class="primary" type="submit">Salvar cartão</button></form></dialog>
 
@@ -122,6 +126,6 @@
 
   <dialog id="subscription-dialog"><form id="subscription-form"><div class="dialog-head"><div><small>NOVA ASSINATURA</small><h2>Adicionar recorrência</h2></div><button class="close-dialog" type="button" aria-label="Fechar">×</button></div><label>Nome<input id="subscription-name" required maxlength="100" placeholder="Ex.: Streaming"></label><div class="form-row"><label>Valor mensal<input id="subscription-amount" required inputmode="decimal" placeholder="0,00"></label><label>Dia da cobrança<input id="subscription-day" required type="number" min="1" max="31"></label></div><label>Cartão<select id="subscription-card"></select></label><p class="form-error" id="subscription-error"></p><button class="primary" type="submit">Salvar assinatura</button></form></dialog>
 
-  <script src="app.js?v=10"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>

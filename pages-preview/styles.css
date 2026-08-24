@@ -11,3 +11,31 @@ html,body{background:#07080a;color:var(--ink)}
 .tab-bar{border-color:#2a2d33;background:#111317ed}.tab-bar button{color:#808792}.tab-bar .active{color:#d8f7ba}.tab-bar .add b{background:#eef4e8;color:#0c0e10;box-shadow:0 12px 32px #d8f7ba30}
 dialog{border:1px solid #343840;background:#15171b;color:#fff}.dialog-head .close-dialog{background:#25282e;color:#fff}.segmented{background:#0d0f12}.segmented .active{background:#d8f7ba;color:#101216}dialog label{color:#c0c4ca}dialog input,dialog select,dialog textarea{border-color:#343840;background:#0e1013;color:#fff;color-scheme:dark}.primary{background:#f2f5ef;color:#0b0d0f}.form-error{color:#ffafb3}
 @media(max-width:390px){.app-shell{padding-inline:16px}.app-header{min-height:134px}.app-heading>span{margin-top:18px}.balance-card{border-radius:22px}.quick-actions{gap:3px}.quick-actions b{width:46px;height:46px}.auth-screen{padding-inline:17px}.auth-card{padding:22px}}
+
+/* v11: responsive transaction editor and private receipts */
+.app-shell h1,.app-shell h2,.app-shell h3,.app-shell strong,.dialog-head h2,.account-menu strong,.transaction-copy strong{color:#fff}
+.filters-card,.date-range,.date-range label,.date-range input,.form-row,.form-row label,.form-row input,.form-row select{min-width:0;max-width:100%}
+.date-range label{color:#c0c4ca}
+.transaction-actions{min-width:100px;text-align:right}.transaction-buttons{display:flex;align-items:center;justify-content:flex-end;gap:9px;margin-top:7px}.transaction-buttons button,.receipt-action{display:inline-flex!important;align-items:center;gap:3px;margin:0!important;padding:4px 0!important;border:0;background:transparent;color:#aeb4bd;font-size:10px}.transaction-buttons button:hover,.receipt-action:hover{color:#d8f7ba}.transaction-buttons .icon,.receipt-action .icon{width:13px;height:13px}.transaction-buttons .delete{color:#ff9da1}
+#installments-field>small,.receipt-field>small{display:block;margin-top:6px;color:#868d97;font-size:10px;font-weight:500}.receipt-field{margin-top:14px}.receipt-field>span{display:block;color:#c0c4ca;font-size:12px;font-weight:700}.file-picker{display:flex;align-items:center;gap:9px;min-height:50px;margin-top:6px;padding:11px 13px;border:1px dashed #454a53;border-radius:12px;background:#0e1013;color:#eef0f2}.file-picker:hover{border-color:#d8f7ba}.file-picker .icon{flex:0 0 auto;width:19px;height:19px;color:#d8f7ba}.file-picker span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-picker input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.remove-receipt{display:flex!important;align-items:center;gap:8px;color:#ffb0b3!important}.remove-receipt input{width:17px;height:17px;margin:0;accent-color:#ff858a}.receipt-dialog{overflow:hidden}.receipt-viewer{padding:20px}.receipt-viewer img{display:block;width:100%;max-height:72vh;margin-top:5px;border-radius:14px;object-fit:contain;background:#090a0c}.receipt-loading{display:grid;place-items:center;min-height:240px;color:#aab0b8}.transaction-dialog form,dialog form{max-height:calc(100dvh - 30px);overflow-y:auto;overscroll-behavior:contain}
+
+@media(max-width:440px){
+  .form-row,.date-range{grid-template-columns:minmax(0,1fr)}
+  .form-row{gap:0}.date-range{gap:10px}
+  .date-range input{height:46px;font-size:16px}
+  .filters-card{overflow:hidden;padding:12px}
+  .page-intro{align-items:flex-start}.page-intro>div{min-width:0}
+  .period-summary{grid-template-columns:1fr 1fr}.period-summary>span:first-child{grid-column:1/-1;padding-bottom:6px}.period-summary strong{font-size:13px}
+  .transaction{grid-template-columns:40px minmax(0,1fr);align-items:start}
+  .transaction-actions{grid-column:2;display:flex;align-items:center;justify-content:space-between;width:100%;min-width:0;text-align:left}
+  .transaction-buttons{margin-top:0}.transaction .amount{text-align:left}
+  .tab-bar{grid-template-columns:repeat(5,minmax(0,1fr));gap:0;padding-inline:4px}
+  .tab-bar button{min-width:0;padding-inline:1px}.tab-bar span{max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:8px}.tab-bar .icon{width:20px;height:20px}.tab-bar .add b{width:48px;height:48px}
+  dialog{width:calc(100% - 20px);max-height:calc(100dvh - 20px);border-radius:20px}dialog form{padding:18px}
+}
+@media(max-width:340px){
+  .app-shell{padding-inline:12px}.auth-screen{padding-inline:12px}.auth-card{padding:18px}
+  .quick-actions b{width:42px;height:42px}.quick-actions button{font-size:9px}
+  .transaction-buttons{gap:7px}.transaction-buttons button,.receipt-action{font-size:9px}
+  .tab-bar span{font-size:7px}.tab-bar .add b{width:44px;height:44px}
+}

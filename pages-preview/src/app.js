@@ -7,8 +7,11 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {persistSession: true, autoRefreshToken: true, detectSessionInUrl: true},
 });
 
-const state = {user: null, transactions: [], categories: [], cards: [], goals: [], subscriptions: [], kind: "expense", datePreset: "all"};
+const state = {user: null, transactions: [], categories: [], cards: [], goals: [], subscriptions: [], kind: "expense", datePreset: "all", editingTransactionId: null};
 const AUTH_TIMEOUT_MS = 15000;
+const RECEIPT_BUCKET = "transaction-receipts";
+const MAX_RECEIPT_SIZE = 5 * 1024 * 1024;
+const RECEIPT_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
 let authAttempt = 0;
 const money = new Intl.NumberFormat("pt-BR", {style: "currency", currency: "BRL"});
 const titles = {home: "Visão geral", transactions: "Movimentações", cards: "Cartões", planning: "Planejamento"};
@@ -204,7 +207,9 @@ function renderTransactionList(target, items, allowDelete) {
   const categoryNames = Object.fromEntries(state.categories.map((item) => [item.id, item.name]));
   target.innerHTML = items.length ? items.map((item) => {
     const suffix = item.installments_total ? ` · ${item.installment_number}/${item.installments_total}` : "";
-    return `<article class="transaction ${item.kind}"><span class="transaction-icon">${icon(item.kind)}</span><span><strong>${escapeHtml(item.description)}</strong><small>${formatDate(item.occurred_on)} · ${escapeHtml(categoryNames[item.category_id] || "Sem categoria")}${suffix}</small></span><span><strong class="amount">${item.kind === "income" ? "+" : "−"}${money.format(Number(item.amount))}</strong>${allowDelete ? `<button class="delete" type="button" data-delete-transaction="${item.id}">Excluir</button>` : ""}</span></article>`;
+    const receipt = item.receipt_path ? `<button class="receipt-action" type="button" data-view-receipt="${item.id}">${icon("camera")}<span>Foto</span></button>` : "";
+    const actions = allowDelete ? `<div class="transaction-buttons"><button type="button" data-edit-transaction="${item.id}">${icon("edit")}<span>Editar</span></button>${receipt}<button class="delete" type="button" data-delete-transaction="${item.id}">Excluir</button></div>` : receipt;
+    return `<article class="transaction ${item.kind}"><span class="transaction-icon">${icon(item.kind)}</span><span class="transaction-copy"><strong>${escapeHtml(item.description)}</strong><small>${formatDate(item.occurred_on)} · ${escapeHtml(categoryNames[item.category_id] || "Sem categoria")}${suffix}</small></span><span class="transaction-actions"><strong class="amount">${item.kind === "income" ? "+" : "−"}${money.format(Number(item.amount))}</strong>${actions}</span></article>`;
   }).join("") : '<p class="empty"><strong>Nenhum lançamento</strong>Use o botão + para começar.</p>';
 }
 
@@ -232,7 +237,9 @@ function updateSelects() {
   category.innerHTML = '<option value="">Sem categoria</option>' + state.categories.filter((item) => item.kind === state.kind).map((item) => `<option value="${item.id}">${escapeHtml(item.name)}</option>`).join("");
   if ([...category.options].some((option) => option.value === previousCategory)) category.value = previousCategory;
   const cards = '<option value="">Não se aplica</option>' + state.cards.map((item) => `<option value="${item.id}">${escapeHtml(item.name)}</option>`).join("");
-  $("#transaction-card").innerHTML = cards; $("#subscription-card").innerHTML = cards;
+  const transactionCard = $("#transaction-card"); const previousCard = transactionCard.value;
+  transactionCard.innerHTML = cards; if ([...transactionCard.options].some((option) => option.value === previousCard)) transactionCard.value = previousCard;
+  $("#subscription-card").innerHTML = cards;
 }
 
 function formatDate(value) { return new Date(`${value}T12:00:00`).toLocaleDateString("pt-BR"); }
@@ -257,25 +264,77 @@ function setForecastPreset(preset) {
   $("#forecast-date").value = preset === "month" ? monthBoundary("end") : offsetDate(Number(preset)); renderForecast();
 }
 
-function openTransaction(kind) {
-  state.kind = kind; const form = $("#transaction-form"); form.reset(); $("#transaction-date").value = new Date().toISOString().slice(0, 10); $("#transaction-installments").value = "1"; $("#transaction-error").textContent = "";
-  $$("[data-kind]").forEach((button) => button.classList.toggle("active", button.dataset.kind === kind)); updateSelects(); $("#transaction-dialog").showModal();
+function openTransaction(kind, transaction = null) {
+  state.kind = transaction?.kind || kind; state.editingTransactionId = transaction?.id || null;
+  const form = $("#transaction-form"); form.reset(); updateSelects();
+  $("#transaction-dialog-eyebrow").textContent = transaction ? "EDITAR LANÇAMENTO" : "NOVO LANÇAMENTO";
+  $("#transaction-dialog-title").textContent = transaction ? "Ajustar movimento" : "Adicionar movimento";
+  $("#transaction-submit").textContent = transaction ? "Salvar alterações" : "Salvar lançamento";
+  $("#transaction-date").value = transaction?.occurred_on || isoDate();
+  $("#transaction-installments").value = transaction?.installments_total || "1";
+  $("#installments-field").hidden = Boolean(transaction);
+  $("#remove-receipt-field").hidden = !transaction?.receipt_path;
+  $("#receipt-label").textContent = transaction?.receipt_path ? "Substituir foto atual" : "Escolher da câmera ou galeria";
+  if (transaction) {
+    $("#transaction-description").value = transaction.description;
+    $("#transaction-amount").value = Number(transaction.amount).toFixed(2).replace(".", ",");
+    $("#transaction-notes").value = transaction.notes || "";
+    $("#transaction-category").value = transaction.category_id || "";
+    $("#transaction-card").value = transaction.card_id || "";
+  }
+  $("#transaction-error").textContent = "";
+  $$("[data-kind]").forEach((button) => button.classList.toggle("active", button.dataset.kind === state.kind));
+  $("#transaction-dialog").showModal();
 }
 
 async function saveTransaction(event) {
   event.preventDefault(); const form = event.currentTarget; const description = valueOf("#transaction-description"); const total = parseMoney(valueOf("#transaction-amount")); const installments = Number(valueOf("#transaction-installments"));
   if (!description || !Number.isFinite(total) || total <= 0 || !Number.isInteger(installments) || installments < 1 || installments > 120) return $("#transaction-error").textContent = "Revise a descrição, o valor e as parcelas.";
+  const file = $("#transaction-receipt").files[0];
+  if (file && (!RECEIPT_TYPES.has(file.type) || file.size > MAX_RECEIPT_SIZE)) return $("#transaction-error").textContent = "Use uma imagem JPG, PNG, WebP ou HEIC de até 5 MB.";
   setBusy(form, true); $("#transaction-error").textContent = "";
+  const editing = state.editingTransactionId ? state.transactions.find((item) => item.id === state.editingTransactionId) : null;
+  let uploadedPath = null;
+  try {
+    if (editing) {
+      if (file) uploadedPath = await uploadReceipt(file, editing.id);
+      const receiptPath = uploadedPath || ($("#remove-receipt").checked ? null : editing.receipt_path);
+      const {error} = await supabase.from("transactions").update({description, amount: total, occurred_on: valueOf("#transaction-date"), kind: state.kind, category_id: valueOf("#transaction-category") || null, card_id: valueOf("#transaction-card") || null, notes: valueOf("#transaction-notes") || null, receipt_path: receiptPath}).eq("id", editing.id);
+      if (error) throw error;
+      if (editing.receipt_path && editing.receipt_path !== receiptPath) await supabase.storage.from(RECEIPT_BUCKET).remove([editing.receipt_path]);
+      $("#transaction-dialog").close(); await loadData(); toast("Lançamento atualizado e sincronizado."); return;
+    }
+    const firstId = crypto.randomUUID();
+    if (file) uploadedPath = await uploadReceipt(file, firstId);
   const totalCents = Math.round(total * 100); const base = Math.floor(totalCents / installments); const remainder = totalCents - base * installments; const group = installments > 1 ? crypto.randomUUID() : null;
   const rows = Array.from({length: installments}, (_, index) => ({
+    id: index === 0 ? firstId : crypto.randomUUID(),
     user_id: state.user.id, description: installments > 1 ? `${description} (${index + 1}/${installments})` : description,
     amount: (base + (index === installments - 1 ? remainder : 0)) / 100, occurred_on: addMonths(valueOf("#transaction-date"), index), kind: state.kind,
     category_id: valueOf("#transaction-category") || null, card_id: valueOf("#transaction-card") || null, notes: valueOf("#transaction-notes") || null,
-    installment_group: group, installment_number: group ? index + 1 : null, installments_total: group ? installments : null,
+    installment_group: group, installment_number: group ? index + 1 : null, installments_total: group ? installments : null, receipt_path: index === 0 ? uploadedPath : null,
   }));
-  const {error} = await supabase.from("transactions").insert(rows); setBusy(form, false);
-  if (error) return $("#transaction-error").textContent = friendlyError(error);
-  $("#transaction-dialog").close(); await loadData(); toast("Lançamento salvo e sincronizado.");
+    const {error} = await supabase.from("transactions").insert(rows); if (error) throw error;
+    $("#transaction-dialog").close(); await loadData(); toast("Lançamento salvo e sincronizado.");
+  } catch (error) {
+    if (uploadedPath) await supabase.storage.from(RECEIPT_BUCKET).remove([uploadedPath]);
+    $("#transaction-error").textContent = friendlyError(error);
+  } finally { setBusy(form, false); }
+}
+
+async function uploadReceipt(file, transactionId) {
+  const extension = (file.name.split(".").pop() || file.type.split("/").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const path = `${state.user.id}/${transactionId}/${crypto.randomUUID()}.${extension}`;
+  const {error} = await supabase.storage.from(RECEIPT_BUCKET).upload(path, file, {contentType: file.type, upsert: false});
+  if (error) throw error; return path;
+}
+
+async function viewReceipt(id) {
+  const transaction = state.transactions.find((item) => item.id === id); if (!transaction?.receipt_path) return;
+  const dialog = $("#receipt-dialog"); const image = $("#receipt-image"); image.hidden = true; image.removeAttribute("src"); $("#receipt-loading").hidden = false; dialog.showModal();
+  const {data, error} = await supabase.storage.from(RECEIPT_BUCKET).createSignedUrl(transaction.receipt_path, 60);
+  if (error) { dialog.close(); return toast(friendlyError(error)); }
+  image.onload = () => { $("#receipt-loading").hidden = true; image.hidden = false; }; image.src = data.signedUrl;
 }
 
 async function saveCard(event) {
@@ -307,7 +366,10 @@ async function updateGoal(id) {
 
 async function deleteTransaction(id) {
   if (!confirm("Excluir este lançamento? Esta ação não pode ser desfeita.")) return;
-  const {error} = await supabase.from("transactions").delete().eq("id", id); if (error) return toast(friendlyError(error)); await loadData(); toast("Lançamento excluído.");
+  const transaction = state.transactions.find((item) => item.id === id);
+  const {error} = await supabase.from("transactions").delete().eq("id", id); if (error) return toast(friendlyError(error));
+  if (transaction?.receipt_path) await supabase.storage.from(RECEIPT_BUCKET).remove([transaction.receipt_path]);
+  await loadData(); toast("Lançamento excluído.");
 }
 
 async function deleteRecord(table, id) {
@@ -359,7 +421,8 @@ function registerEvents() {
   $$("[data-forecast-preset]").forEach((button) => button.addEventListener("click", () => setForecastPreset(button.dataset.forecastPreset)));
   $$("[data-date-preset]").forEach((button) => button.addEventListener("click", () => setDatePreset(button.dataset.datePreset)));
   [$("#filter-date-start"), $("#filter-date-end")].forEach((input) => input.addEventListener("change", () => { state.datePreset = "custom"; $$("[data-date-preset]").forEach((button) => button.classList.remove("active")); $("#filter-date-start").max = valueOf("#filter-date-end") || "9999-12-31"; $("#filter-date-end").min = valueOf("#filter-date-start"); renderTransactions(); }));
-  document.addEventListener("click", (event) => { const transaction = event.target.closest("[data-delete-transaction]"); if (transaction) deleteTransaction(transaction.dataset.deleteTransaction); const record = event.target.closest("[data-delete-record]"); if (record) { const [table, id] = record.dataset.deleteRecord.split(":"); deleteRecord(table, id); } const goal = event.target.closest("[data-update-goal]"); if (goal) updateGoal(goal.dataset.updateGoal); });
+  $("#transaction-receipt").addEventListener("change", (event) => { const file = event.target.files[0]; $("#receipt-label").textContent = file ? file.name : "Escolher da câmera ou galeria"; });
+  document.addEventListener("click", (event) => { const transaction = event.target.closest("[data-delete-transaction]"); if (transaction) deleteTransaction(transaction.dataset.deleteTransaction); const edit = event.target.closest("[data-edit-transaction]"); if (edit) openTransaction("expense", state.transactions.find((item) => item.id === edit.dataset.editTransaction)); const receipt = event.target.closest("[data-view-receipt]"); if (receipt) viewReceipt(receipt.dataset.viewReceipt); const record = event.target.closest("[data-delete-record]"); if (record) { const [table, id] = record.dataset.deleteRecord.split(":"); deleteRecord(table, id); } const goal = event.target.closest("[data-update-goal]"); if (goal) updateGoal(goal.dataset.updateGoal); });
   document.addEventListener("click", (event) => { if (!event.target.closest("#account-button") && !event.target.closest("#account-menu")) $("#account-menu").hidden = true; });
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") $("#account-menu").hidden = true; });
   window.addEventListener("offline", updateNetwork); window.addEventListener("online", () => { updateNetwork(); if (state.user) loadData(); }); updateNetwork();
