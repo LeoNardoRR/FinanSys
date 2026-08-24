@@ -36,6 +36,10 @@ function friendlyError(error) {
   if (/email not confirmed/i.test(message)) return "Confirme seu e-mail antes de entrar.";
   if (/user already registered/i.test(message)) return "Este e-mail já possui uma conta.";
   if (/password/i.test(message) && /least/i.test(message)) return "A senha precisa ter pelo menos 8 caracteres.";
+  if (/only request this after/i.test(message)) {
+    const seconds = message.match(/after (\d+) seconds?/i)?.[1] || "alguns";
+    return `O e-mail já foi solicitado. Aguarde ${seconds} segundos antes de tentar novamente.`;
+  }
   if (/rate limit|too many/i.test(message)) return "Muitas tentativas. Aguarde alguns minutos.";
   if (/failed to fetch|network/i.test(message)) return "Sem conexão com o servidor. Verifique sua internet.";
   return message;
@@ -221,7 +225,19 @@ function registerEvents() {
   $$("[data-auth-tab]").forEach((button) => button.addEventListener("click", () => showAuth(button.dataset.authTab)));
   $("#forgot-password").addEventListener("click", () => showAuth("recovery"));
   $("#login-form").addEventListener("submit", async (event) => { event.preventDefault(); setBusy(event.currentTarget, true); setAuthMessage(); const {error} = await supabase.auth.signInWithPassword({email: valueOf("#login-email"), password: valueOf("#login-password")}); setBusy(event.currentTarget, false); if (error) setAuthMessage(friendlyError(error)); });
-  $("#signup-form").addEventListener("submit", async (event) => { event.preventDefault(); const password = valueOf("#signup-password"); if (password !== valueOf("#signup-password-confirm")) return setAuthMessage("As senhas não coincidem."); setBusy(event.currentTarget, true); setAuthMessage(); const {data, error} = await supabase.auth.signUp({email: valueOf("#signup-email"), password, options: {emailRedirectTo: APP_URL}}); setBusy(event.currentTarget, false); if (error) return setAuthMessage(friendlyError(error)); if (!data.session) setAuthMessage("Conta criada. Confira seu e-mail para confirmar o acesso.", true); });
+  $("#signup-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const password = valueOf("#signup-password");
+    if (password !== valueOf("#signup-password-confirm")) return setAuthMessage("As senhas não coincidem.");
+    setBusy(event.currentTarget, true); setAuthMessage();
+    const {data, error} = await supabase.auth.signUp({email: valueOf("#signup-email"), password, options: {emailRedirectTo: APP_URL}});
+    setBusy(event.currentTarget, false);
+    if (error) { const message = friendlyError(error); setAuthMessage(message); toast(message); return; }
+    if (!data.session) {
+      const message = "Cadastro recebido. Abra o e-mail de confirmação para liberar sua conta.";
+      setAuthMessage(message, true); toast(message);
+    }
+  });
   $("#recovery-form").addEventListener("submit", async (event) => { event.preventDefault(); setBusy(event.currentTarget, true); const {error} = await supabase.auth.resetPasswordForEmail(valueOf("#recovery-email"), {redirectTo: APP_URL}); setBusy(event.currentTarget, false); setAuthMessage(error ? friendlyError(error) : "Enviamos o link de recuperação para seu e-mail.", !error); });
   $("#new-password-form").addEventListener("submit", async (event) => { event.preventDefault(); setBusy(event.currentTarget, true); const {error} = await supabase.auth.updateUser({password: valueOf("#new-password")}); setBusy(event.currentTarget, false); if (error) return setAuthMessage(friendlyError(error)); toast("Senha atualizada."); });
   $("#logout-button").addEventListener("click", async () => { await supabase.auth.signOut(); });
